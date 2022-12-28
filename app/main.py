@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, status, Path, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from .schema import ClientIn, ClientOut
+from .schema import ClientIn, ClientOut, ClientInWithID
 from . import crud
 
 app = FastAPI()
@@ -26,19 +26,27 @@ def create_client(client: ClientIn):
     return client
 
 
+@app.put("/client/", response_model=ClientOut)
+def update_client(client: ClientInWithID):
+    db_client = crud.get_client_by_id(client.id)
+    if not db_client:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="This client doesn't exists")
+    return crud.update_client(client)
+
+
 @app.get("/client/{client_id}", response_model=ClientOut, responses={
     422: {
         "description": "Wrong ID",
         "content": {
             "application/json": {
-                "example": {"message": "Wrong ID"}
+                "example": {"detail": "Wrong ID"}
             }
         },
     }
 })
 def get_client(client_id: int = Path()):
     if client_id >= crud.next_client_id:
-        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content={"message": "Wrong ID"})
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Wrong ID")
     client = crud.get_client_by_id(client_id)
     return client
 
