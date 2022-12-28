@@ -34,6 +34,16 @@ class ClientBase(BaseModel):
     tag: str | None = None
     timezone: str
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "phone_number": 79009999999,
+                "phone_operator_code": 900,
+                "tag": "sometag",
+                "timezone": "Europe/Amsterdam",
+            }
+        }
+
     @validator("timezone")
     def timezone_exists(cls, timezone):
         if timezone not in all_timezones_set:
