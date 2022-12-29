@@ -5,25 +5,56 @@ from enum import Enum
 from pydantic import BaseModel, Field, validator
 
 
-class Mailing(BaseModel):
-    id: int
+class MailingBase(BaseModel):
     text: str
-    clients_tags: list[MailingTags] = []
-    clients_mobile_operator_code: list[MailingMobileOperatorCode] = []
     start_time: datetime
     end_time: datetime
 
 
-class MailingTags(BaseModel):
+class Mailing(MailingBase):
     id: int
+    clients_tags: list[MailingTag] = []
+    clients_mobile_operator_codes: list[MailingMobileOperatorCode] = []
+
+
+class MailingIn(MailingBase):
+    clients_tags: list[MailingTagIn] = []
+    clients_mobile_operator_codes: list[MailingMobileOperatorCode] = []
+
+
+class MailingOut(MailingBase):
+    id: int
+    clients_tags: list[MailingTag] = []
+    clients_mobile_operator_codes: list[MailingMobileOperatorCode] = []
+
+
+class MailingTagBase(BaseModel):
     text: str
+
+
+class MailingTag(MailingTagBase):
     mailing_id: int
     mailing: Mailing
 
 
-class MailingMobileOperatorCode(BaseModel):
-    id: int
+class MailingTagIn(MailingTagBase):
+    pass
+
+
+class MailingMobileOperatorCodeBase(BaseModel):
     code: int
+
+
+class MailingMobileOperatorCode(MailingMobileOperatorCodeBase):
+    mailing_id: int
+    mailing: Mailing
+
+
+class MailingMobileOperatorCodeIn(MailingMobileOperatorCodeBase):
+    pass
+
+
+class MailingMobileOperatorCodeOut(MailingMobileOperatorCodeBase):
     mailing_id: int
     mailing: Mailing
 
@@ -57,6 +88,10 @@ class Client(ClientBase):
 
 class ClientIn(ClientBase):
     pass
+
+
+class ClientInWithID(ClientBase):
+    id: int
 
 
 class ClientOut(ClientBase):
