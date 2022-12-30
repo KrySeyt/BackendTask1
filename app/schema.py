@@ -10,22 +10,116 @@ class MailingBase(BaseModel):
     start_time: datetime
     end_time: datetime
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "text": "string",
+                "start_time": "2022-12-29T21:52:48.840Z",
+                "end_time": "2022-12-29T21:52:48.840Z",
+            }
+        }
+
 
 class Mailing(MailingBase):
     id: int
     clients_tags: list[MailingTag] = []
     clients_mobile_operator_codes: list[MailingMobileOperatorCode] = []
 
+    class Config(MailingBase.Config):
+        schema_extra = {
+            **MailingBase.Config.schema_extra,
+            **{
+                "example": {
+                    **MailingBase.Config.schema_extra.get("example", {}),
+                    **{
+                        "id": 0,
+                        "clients_tags": [
+                            {
+                                "text": "tag text"
+                            }
+                        ],
+                        "clients_mobile_operator_codes": [
+                            {
+                                "code": 900
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+
 
 class MailingIn(MailingBase):
     clients_tags: list[MailingTagIn] = []
-    clients_mobile_operator_codes: list[MailingMobileOperatorCode] = []
+    clients_mobile_operator_codes: list[MailingMobileOperatorCodeIn] = []
+
+    class Config(MailingBase.Config):
+        schema_extra = {
+            **MailingBase.Config.schema_extra,
+            **{
+                "example": {
+                    **MailingBase.Config.schema_extra.get("example", {}),
+                    **{
+                        "clients_tags": [
+                            {
+                                "text": "tag text"
+                            }
+                        ],
+                        "clients_mobile_operator_codes": [
+                            {
+                                "code": 900
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+
+
+class MailingInWithID(MailingIn):
+    id: int
+
+    class Config(MailingIn.Config):
+        schema_extra = {
+            **MailingIn.Config.schema_extra,
+            **{
+                "example": {
+                    **MailingIn.Config.schema_extra.get("example", {}),
+                    **{
+                        "id": 0
+                    }
+                }
+            }
+        }
 
 
 class MailingOut(MailingBase):
     id: int
-    clients_tags: list[MailingTag] = []
-    clients_mobile_operator_codes: list[MailingMobileOperatorCode] = []
+    clients_tags: list[MailingTagOut] = []
+    clients_mobile_operator_codes: list[MailingMobileOperatorCodeOut] = []
+
+    class Config(MailingBase.Config):
+        schema_extra = {
+            **MailingBase.Config.schema_extra,
+            **{
+                "example": {
+                    **MailingBase.Config.schema_extra.get("example", {}),
+                    **{
+                        "id": 0,
+                        "clients_tags": [
+                            {
+                                "text": "Anothet tag text"
+                            }
+                        ],
+                        "clients_mobile_operator_codes": [
+                            {
+                                "code": 900
+                            }
+                        ]
+                    }
+                }
+            }
+        }
 
 
 class MailingTagBase(BaseModel):
@@ -33,8 +127,11 @@ class MailingTagBase(BaseModel):
 
 
 class MailingTag(MailingTagBase):
-    mailing_id: int
-    mailing: Mailing
+    pass
+
+
+class MailingTagOut(MailingTagBase):
+    pass
 
 
 class MailingTagIn(MailingTagBase):
@@ -46,8 +143,7 @@ class MailingMobileOperatorCodeBase(BaseModel):
 
 
 class MailingMobileOperatorCode(MailingMobileOperatorCodeBase):
-    mailing_id: int
-    mailing: Mailing
+    pass
 
 
 class MailingMobileOperatorCodeIn(MailingMobileOperatorCodeBase):
@@ -55,8 +151,7 @@ class MailingMobileOperatorCodeIn(MailingMobileOperatorCodeBase):
 
 
 class MailingMobileOperatorCodeOut(MailingMobileOperatorCodeBase):
-    mailing_id: int
-    mailing: Mailing
+    pass
 
 
 class ClientBase(BaseModel):
@@ -90,7 +185,7 @@ class ClientIn(ClientBase):
     pass
 
 
-class ClientInWithID(ClientBase):
+class ClientInWithID(ClientIn):
     id: int
 
 
@@ -109,3 +204,58 @@ class Message(BaseModel):
     status: MessageStatus
     mailing_id: int
     client_id: int
+
+
+class MailingStatsBase(BaseModel):
+    messages: dict[MessageStatus, int]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "messages": {
+                    status: 0 for status in MessageStatus
+                }
+            }
+        }
+
+
+class MailingStats(MailingStatsBase):
+    mailing: Mailing
+
+    class Config:
+        schema_extra = {
+            "example": {
+                **MailingStatsBase.Config.schema_extra.get("example", {}),
+                "mailing": Mailing.Config.schema_extra.get("example", {}),
+            }
+        }
+
+
+class MailingStatsOut(MailingStatsBase):
+    mailing: MailingOut
+
+    class Config:
+        schema_extra = {
+            "example": {
+                **MailingStatsBase.Config.schema_extra.get("example", {}),
+                "mailing": MailingOut.Config.schema_extra.get("example", {}),
+            }
+        }
+
+
+class DetailMailingStatsBase(BaseModel):
+    messages: list[Message]
+
+
+class DetailMailingStats(DetailMailingStatsBase):
+    mailing: Mailing
+
+
+class DetailMailingStatsOut(DetailMailingStatsBase):
+    mailing: MailingOut
+
+
+Mailing.update_forward_refs()
+MailingIn.update_forward_refs()
+MailingOut.update_forward_refs()
+MailingInWithID.update_forward_refs()

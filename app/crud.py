@@ -1,4 +1,5 @@
-from .schema import Client, ClientIn, Mailing, Message, ClientInWithID, MailingIn, MailingTag, MailingMobileOperatorCode
+from .schema import Client, ClientIn, Mailing, Message, ClientInWithID, MailingIn, MailingTag, \
+    MailingMobileOperatorCode, MailingInWithID, MailingStats
 
 MAILINGS: list[Mailing] = []  # This is a temporary storage for this, while I didn't implement SqlAlchemy + Alembic
 next_mailing_id = 0
@@ -36,14 +37,16 @@ def get_clients(skip: int = 0, limit: int = 100) -> list[Client]:
     return CLIENTS[skip:limit]
 
 
-def update_client(client: ClientInWithID) -> Client:
+def update_client(client: ClientInWithID) -> Client | None:
     client_in_list = get_client_by_id(client.id)
+    if not client_in_list:
+        return None
     for key in client.dict():
         setattr(client_in_list, key, client.dict()[key])
     return client_in_list
 
 
-def delete_client(client_id: int) -> Client:
+def delete_client(client_id: int) -> Client | None:
     client_in_list = get_client_by_id(client_id)
     if client_in_list:
         CLIENTS.remove(client_in_list)
@@ -51,20 +54,50 @@ def delete_client(client_id: int) -> Client:
 
 
 def create_mailing(mailing: MailingIn) -> Mailing:
-    mailing_in_list = Mailing(**mailing.dict(), id=next_mailing_id)
-
-    tags = []
-    for tag in mailing.clients_tags:
-        db_tag = MailingTag(**tag.dict(), mailing=mailing_in_list, mailing_id=mailing_in_list.id)
-        tags.append(db_tag)
-    mailing_in_list.clients_tags = tags
-
-    mobile_codes = []
-    for code in mailing.clients_mobile_operator_codes:
-        db_code = MailingMobileOperatorCode(**code.dict(), mailing=mailing_in_list, mailing_id=mailing_in_list.id)
-        mobile_codes.append(db_code)
-    mailing_in_list.clients_mobile_operator_codes = mobile_codes
+    global next_mailing_id
+    mailing_in_list = Mailing(
+        text=mailing.text,
+        start_time=mailing.start_time,
+        end_time=mailing.end_time,
+        id=next_mailing_id,
+        clients_tags=[MailingTag(**tag.dict()) for tag in mailing.clients_tags],
+        clients_mobile_operator_codes=[
+            MailingMobileOperatorCode(**code.dict())
+            for code in mailing.clients_mobile_operator_codes
+        ]
+    )
 
     MAILINGS.append(mailing_in_list)
+    next_mailing_id += 1
     return mailing_in_list
 
+
+def get_mailing_by_id(mailing_id: int) -> Mailing | None:
+    for mailing in MAILINGS:
+        if mailing.id == mailing_id:
+            return mailing
+    return None
+
+
+def delete_mailing(mailing_id: int) -> Mailing | None:
+    mailing = get_mailing_by_id(mailing_id)
+    if mailing:
+        MAILINGS.remove(mailing)
+    return mailing
+
+
+def update_mailing(mailing: MailingInWithID) -> Mailing | None:
+    mailing_in_list = get_mailing_by_id(mailing.id)
+    if not mailing_in_list:
+        return None
+    for key in mailing.dict():
+        setattr(mailing_in_list, key, mailing.dict()[key])
+    return mailing_in_list
+
+
+def get_all_mailings() -> list[Mailing]:
+    return MAILINGS[:]
+
+
+def get_mailing_messages(mailing_id) -> list[Message]:
+    return list(filter(lambda x: x.mailing_id == mailing_id, MESSAGES))

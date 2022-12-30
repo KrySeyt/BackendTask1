@@ -1,8 +1,10 @@
+from collections import Counter, defaultdict
 from fastapi import FastAPI, Request, status, Path, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from .schema import ClientIn, ClientOut, ClientInWithID, MailingOut, MailingIn
+from .schema import ClientIn, ClientOut, ClientInWithID, MailingOut, MailingIn, MailingInWithID, MailingStats, \
+    MailingStatsOut, MessageStatus, DetailMailingStatsOut, DetailMailingStats
 from . import crud
 
 app = FastAPI()
@@ -91,7 +93,7 @@ def delete_client(client_id: int = Path()):
     return crud.delete_client(client_id)
 
 
-@app.get("/clients/", 
+@app.get("/clients/",
          response_model=list[ClientOut],
          tags=["client"])
 def get_clients(skip: int = 0, limit: int = 100):
@@ -103,16 +105,104 @@ def get_clients(skip: int = 0, limit: int = 100):
           tags=["mailing"],
           response_model=MailingOut)
 def create_mailing(mailing: MailingIn):
-    pass
+    return crud.create_mailing(mailing)
 
 
-@app.get("/mailings/",
-         tags=["mailing"])
-def get_mailings(skip: int = 0, limit: int = 100):
-    pass
+@app.delete("/mailing/{mailing_id}",
+            tags=["mailing"],
+            response_model=MailingOut,
+            responses={
+                422: {
+                    "description": "Wrong ID",
+                    "content": {
+                        "application/json": {
+                            "example": {"detail": "Mailing with this ID doesnt exists"}
+                        }
+                    },
+                }
+            })
+def delete_mailing(mailing_id: int = Path()):
+    mailing = crud.get_mailing_by_id(mailing_id)
+    if not mailing:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail="Mailing with this ID doesn't exists")
+    return crud.delete_mailing(mailing_id)
+
+
+@app.put("/mailing/",
+         tags=["mailing"],
+         response_model=MailingOut,
+         responses={
+             422: {
+                 "description": "Wrong ID",
+                 "content": {
+                     "application/json": {
+                         "example": {"detail": "Mailing with this ID doesn't exists"}
+                     }
+                 },
+             }
+         })
+def update_mailing(mailing: MailingInWithID):
+    mailing_in_db = crud.get_mailing_by_id(mailing.id)
+    if not mailing_in_db:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail="Mailing with this ID doesn't exists")
+    return crud.update_mailing(mailing)
+
+
+@app.get("/mailing/{mailing_id}",
+         response_model=MailingOut,
+         tags=["mailing"],
+         responses={
+             422: {
+                 "description": "Wrong ID",
+                 "content": {
+                     "application/json": {
+                         "example": {"detail": "Mailing with this ID doesn't exists"}
+                     }
+                 },
+             }
+         })
+def get_mailing(mailing_id: int = Path()):
+    mailing = crud.get_mailing_by_id(mailing_id)
+    if not mailing:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            "Mailing with this ID doesn't exists")
+    return mailing
 
 
 @app.get("/stats/",
-         tags=["mailing"])
+         tags=["stats"],
+         response_model=list[MailingStatsOut])
 def get_stats():
-    pass
+    stats = []
+    for mailing in crud.get_all_mailings():
+        messages = crud.get_mailing_messages(mailing.id)
+        messages = dict(Counter((message.status for message in messages)))
+        for sts in MessageStatus:
+            if sts not in messages:
+                messages[sts] = 0
+        stats.append(MailingStats(mailing=mailing, messages=messages))
+    return stats
+
+
+@app.get("/stats/{mailing_id}",
+         tags=["stats"],
+         response_model=DetailMailingStatsOut,
+         responses={
+             422: {
+                 "description": "Wrong ID",
+                 "content": {
+                     "application/json": {
+                         "example": {"detail": "Mailing with this ID desn't exists"}
+                     }
+                 },
+             }
+         })
+def get_one_mailing_stats(mailing_id: int = Path()):
+    mailing = crud.get_mailing_by_id(mailing_id)
+    if not mailing:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail="Mailing with this ID doesn't exists")
+    messages = crud.get_mailing_messages(mailing_id)
+    return DetailMailingStats(mailing=mailing, messages=messages)
