@@ -1,5 +1,8 @@
+import datetime
+from typing import Sequence
+
 from .schema import Client, ClientIn, Mailing, Message, ClientInWithID, MailingIn, MailingTag, \
-    MailingMobileOperatorCode, MailingInWithID, MailingStats
+    MailingInWithID, MailingStats, MessageStatus
 
 MAILINGS: list[Mailing] = []  # This is a temporary storage for this, while I didn't implement SqlAlchemy + Alembic
 next_mailing_id = 0
@@ -61,10 +64,7 @@ def create_mailing(mailing: MailingIn) -> Mailing:
         end_time=mailing.end_time,
         id=next_mailing_id,
         clients_tags=[MailingTag(**tag.dict()) for tag in mailing.clients_tags],
-        clients_mobile_operator_codes=[
-            MailingMobileOperatorCode(**code.dict())
-            for code in mailing.clients_mobile_operator_codes
-        ]
+        clients_mobile_operator_codes=mailing.clients_mobile_operator_codes
     )
 
     MAILINGS.append(mailing_in_list)
@@ -101,3 +101,33 @@ def get_all_mailings() -> list[Mailing]:
 
 def get_mailing_messages(mailing_id) -> list[Message]:
     return list(filter(lambda x: x.mailing_id == mailing_id, MESSAGES))
+
+
+def get_clients_by_tag(tag: MailingTag) -> list[Client]:
+    return list(filter(lambda x: x.tag == tag, CLIENTS))
+
+
+def get_clients_by_tags(tags: list[MailingTag]) -> list[Client]:
+    return list(filter(lambda x: x.tag in tags, CLIENTS))
+
+
+def get_clients_by_phone_code(phone_code: int) -> list[Client]:
+    return list(filter(lambda x: x.phone_operator_code == phone_code, CLIENTS))
+
+
+def get_clients_by_phone_codes(phone_codes: Sequence[int]) -> list[Client]:
+    return list(filter(lambda x: x.phone_operator_code in phone_codes, CLIENTS))
+
+
+def create_message(mailing: Mailing, client: Client) -> Message:
+    global next_message_id
+    message = Message(
+        mailing_id=mailing.id,
+        client_id=client.id,
+        created_at=datetime.datetime.now(),
+        status=MessageStatus.not_delivered,
+        id=next_message_id,
+    )
+
+    next_message_id += 1
+    return message

@@ -5,7 +5,12 @@ from enum import Enum
 from pydantic import BaseModel, Field, validator
 
 
-class MailingBase(BaseModel):
+class HashableBaseModel(BaseModel):
+    def __hash__(self):
+        return id(self)
+
+
+class MailingBase(HashableBaseModel):
     text: str
     start_time: datetime
     end_time: datetime
@@ -23,7 +28,7 @@ class MailingBase(BaseModel):
 class Mailing(MailingBase):
     id: int
     clients_tags: list[MailingTag] = []
-    clients_mobile_operator_codes: list[MailingMobileOperatorCode] = []
+    clients_mobile_operator_codes: list[int] = []
 
     class Config(MailingBase.Config):
         schema_extra = {
@@ -35,13 +40,11 @@ class Mailing(MailingBase):
                         "id": 0,
                         "clients_tags": [
                             {
-                                "text": "tag text"
+                                "text": "Any text"
                             }
                         ],
                         "clients_mobile_operator_codes": [
-                            {
-                                "code": 900
-                            }
+                            900, 910
                         ]
                     }
                 }
@@ -51,7 +54,7 @@ class Mailing(MailingBase):
 
 class MailingIn(MailingBase):
     clients_tags: list[MailingTagIn] = []
-    clients_mobile_operator_codes: list[MailingMobileOperatorCodeIn] = []
+    clients_mobile_operator_codes: list[int] = []
 
     class Config(MailingBase.Config):
         schema_extra = {
@@ -62,13 +65,11 @@ class MailingIn(MailingBase):
                     **{
                         "clients_tags": [
                             {
-                                "text": "tag text"
+                                "text": "Any text"
                             }
                         ],
                         "clients_mobile_operator_codes": [
-                            {
-                                "code": 900
-                            }
+                            900, 910
                         ]
                     }
                 }
@@ -96,7 +97,7 @@ class MailingInWithID(MailingIn):
 class MailingOut(MailingBase):
     id: int
     clients_tags: list[MailingTagOut] = []
-    clients_mobile_operator_codes: list[MailingMobileOperatorCodeOut] = []
+    clients_mobile_operator_codes: list[int] = []
 
     class Config(MailingBase.Config):
         schema_extra = {
@@ -108,13 +109,11 @@ class MailingOut(MailingBase):
                         "id": 0,
                         "clients_tags": [
                             {
-                                "text": "Anothet tag text"
+                                "text": "Any text"
                             }
                         ],
                         "clients_mobile_operator_codes": [
-                            {
-                                "code": 900
-                            }
+                            900, 910
                         ]
                     }
                 }
@@ -138,26 +137,9 @@ class MailingTagIn(MailingTagBase):
     pass
 
 
-class MailingMobileOperatorCodeBase(BaseModel):
-    code: int
-
-
-class MailingMobileOperatorCode(MailingMobileOperatorCodeBase):
-    pass
-
-
-class MailingMobileOperatorCodeIn(MailingMobileOperatorCodeBase):
-    pass
-
-
-class MailingMobileOperatorCodeOut(MailingMobileOperatorCodeBase):
-    pass
-
-
-class ClientBase(BaseModel):
+class ClientBase(HashableBaseModel):
     phone_number: int = Field(ge=70000000000, le=79999999999)
     phone_operator_code: int
-    tag: str | None = None
     timezone: str
 
     class Config:
@@ -165,7 +147,6 @@ class ClientBase(BaseModel):
             "example": {
                 "phone_number": 79009999999,
                 "phone_operator_code": 900,
-                "tag": "sometag",
                 "timezone": "Europe/Amsterdam",
             }
         }
@@ -179,18 +160,53 @@ class ClientBase(BaseModel):
 
 class Client(ClientBase):
     id: int
+    tag: MailingTag
 
 
 class ClientIn(ClientBase):
-    pass
+    tag: MailingTagIn
+
+    class Config:
+        schema_extra = {
+            **ClientBase.Config.schema_extra,
+            **{
+                "example": {
+                    **ClientBase.Config.schema_extra.get("example", {}),
+                    **{
+                        "tag":
+                            {
+                                "text": "Any text"
+                            }
+                    }
+                }
+            }
+        }
 
 
 class ClientInWithID(ClientIn):
     id: int
+    tag: MailingTagIn
 
 
 class ClientOut(ClientBase):
     id: int
+    tag: MailingTagOut
+
+    class Config:
+        schema_extra = {
+            **ClientBase.Config.schema_extra,
+            **{
+                "example": {
+                    **ClientBase.Config.schema_extra.get("example", {}),
+                    **{
+                        "tag":
+                            {
+                                "text": "Any text"
+                            }
+                    }
+                }
+            }
+        }
 
 
 class MessageStatus(Enum):
