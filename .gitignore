@@ -1,3 +1,5 @@
 alembic.ini
 .idea
 app/__pycache__
+venv
+.mypy_cache

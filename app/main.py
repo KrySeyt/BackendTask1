@@ -1,24 +1,27 @@
-from collections import Counter
-from fastapi import FastAPI, Request, status, Path, HTTPException
+from fastapi import FastAPI, Request, status, Path, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from .schema import ClientIn, ClientOut, ClientInWithID, MailingOut, MailingIn, MailingInWithID, MailingStats, \
-    MailingStatsOut, MessageStatus, DetailMailingStatsOut, DetailMailingStats
-from . import crud
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .schema import ClientIn, ClientOut, ClientInWithID, MailingOut, MailingIn, MailingInWithID, \
+    MailingStatsOut, DetailMailingStatsOut, Client, Mailing, MailingStats, DetailMailingStats
+from . import mailings, stats
+from . import clients
+from .database import SessionLocal
 from .schedule import Schedule
 from .endpoints import APIEndpoint, TestEndpoint
-from . import mailings
 
 app = FastAPI()
 
 
 # endpoint = APIEndpoint(r'https://httpbin.org/post/')
 endpoint = TestEndpoint()
+db_session: AsyncSession = SessionLocal()
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_error_handler(request: Request, exc: RequestValidationError):
+async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=jsonable_encoder({
@@ -29,18 +32,30 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
     )
 
 
+@app.on_event("shutdown")
+async def close_db_session() -> None:
+    global db_session
+    await db_session.close()
+
+
+async def get_db() -> AsyncSession:
+    global db_session
+    return db_session
+
+
 @app.on_event("startup")
-async def mailings_in_db_to_schedule():
-    all_mailings = crud.get_all_mailings()
+async def mailings_in_db_to_schedule() -> None:
+    db = await get_db()
+    all_mailings = await mailings.get_all_mailings(db)
     for mailing in all_mailings:
-        await Schedule.add_mailing_to_schedule(mailing, endpoint)
+        await Schedule.add_mailing_to_schedule(db, mailing, endpoint)
 
 
 @app.post("/client/",
           response_model=ClientOut,
           tags=["client"])
-async def create_client(client: ClientIn):
-    client = crud.create_client(client)
+async def create_client(client_in: ClientIn, db: AsyncSession = Depends(get_db)) -> Client:
+    client = await clients.create_client(db, client_in)
     return client
 
 
@@ -57,12 +72,12 @@ async def create_client(client: ClientIn):
                  }
              }
          })
-async def update_client(client: ClientInWithID):
-    db_client = crud.get_client_by_id(client.id)
+async def update_client(client: ClientInWithID, db: AsyncSession = Depends(get_db)) -> Client | None:
+    db_client = await clients.get_client_by_id(db, client.id)
     if not db_client:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                             detail="This client doesn't exists")
-    return crud.update_client(client)
+    return await clients.update_client(db, client)
 
 
 @app.get("/client/{client_id}",
@@ -78,11 +93,11 @@ async def update_client(client: ClientInWithID):
                  },
              }
          })
-async def get_client(client_id: int = Path()):
-    if client_id >= crud.next_client_id:
+async def get_client(client_id: int = Path(), db: AsyncSession = Depends(get_db)) -> Client:
+    client = await clients.get_client_by_id(db, client_id)
+    if not client:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                             detail="Wrong ID")
-    client = crud.get_client_by_id(client_id)
     return client
 
 
@@ -99,27 +114,27 @@ async def get_client(client_id: int = Path()):
                     },
                 }
             })
-async def delete_client(client_id: int = Path()):
-    client = crud.get_client_by_id(client_id)
+async def delete_client(client_id: int = Path(), db: AsyncSession = Depends(get_db)) -> Client | None:
+    client = await clients.get_client_by_id(db, client_id)
     if not client:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                             detail="Client with this ID doesnt exists")
-    return crud.delete_client(client_id)
+    return await clients.delete_client(db, client_id)
 
 
 @app.get("/clients/",
          response_model=list[ClientOut],
          tags=["client"])
-async def get_clients(skip: int = 0, limit: int = 100):
-    clients = crud.get_clients(skip, limit)
-    return clients
+async def get_clients(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)) -> list[Client]:
+    clients_list = await clients.get_clients(db, skip, limit)
+    return clients_list
 
 
 @app.post("/mailing/",
           tags=["mailing"],
           response_model=MailingOut)
-async def create_mailing(mailing: MailingIn):
-    return await mailings.create_mailing(mailing, endpoint)
+async def create_mailing(mailing: MailingIn, db: AsyncSession = Depends(get_db)) -> Mailing:
+    return await mailings.create_mailing(db, mailing, endpoint)
 
 
 @app.delete("/mailing/{mailing_id}",
@@ -135,12 +150,12 @@ async def create_mailing(mailing: MailingIn):
                     },
                 }
             })
-async def delete_mailing(mailing_id: int = Path()):
-    mailing = crud.get_mailing_by_id(mailing_id)
+async def delete_mailing(mailing_id: int = Path(), db: AsyncSession = Depends(get_db)) -> Mailing:
+    mailing = await mailings.get_mailing_by_id(db, mailing_id)
     if not mailing:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                             detail="Mailing with this ID doesn't exists")
-    return await mailings.delete_mailing(mailing)
+    return await mailings.delete_mailing(db, mailing)
 
 
 @app.put("/mailing/",
@@ -156,12 +171,12 @@ async def delete_mailing(mailing_id: int = Path()):
                  },
              }
          })
-async def update_mailing(mailing: MailingInWithID):
-    mailing_in_db = crud.get_mailing_by_id(mailing.id)
+async def update_mailing(mailing: MailingInWithID, db: AsyncSession = Depends(get_db)) -> Mailing | None:
+    mailing_in_db = await mailings.get_mailing_by_id(db, mailing.id)
     if not mailing_in_db:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                             detail="Mailing with this ID doesn't exists")
-    return await mailings.update_mailing(mailing_in_db=mailing_in_db, new_mailing=mailing)
+    return await mailings.update_mailing(db, mailing, endpoint)
 
 
 @app.get("/mailing/{mailing_id}",
@@ -177,8 +192,8 @@ async def update_mailing(mailing: MailingInWithID):
                  },
              }
          })
-async def get_mailing(mailing_id: int = Path()):
-    mailing = crud.get_mailing_by_id(mailing_id)
+async def get_mailing(mailing_id: int = Path(), db: AsyncSession = Depends(get_db)) -> Mailing:
+    mailing = await mailings.get_mailing_by_id(db, mailing_id)
     if not mailing:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
                             "Mailing with this ID doesn't exists")
@@ -188,16 +203,8 @@ async def get_mailing(mailing_id: int = Path()):
 @app.get("/stats/",
          tags=["stats"],
          response_model=list[MailingStatsOut])
-async def get_stats():
-    stats = []
-    for mailing in crud.get_all_mailings():
-        messages = crud.get_mailing_messages(mailing.id)
-        messages = dict(Counter((message.status for message in messages)))
-        for sts in MessageStatus:
-            if sts not in messages:
-                messages[sts] = 0
-        stats.append(MailingStats(mailing=mailing, messages=messages))
-    return stats
+async def get_stats(db: AsyncSession = Depends(get_db)) -> list[MailingStats]:
+    return await stats.get_stats(db)
 
 
 @app.get("/stats/{mailing_id}",
@@ -213,10 +220,9 @@ async def get_stats():
                  },
              }
          })
-async def get_one_mailing_stats(mailing_id: int = Path()):
-    mailing = crud.get_mailing_by_id(mailing_id)
+async def get_mailing_stats(mailing_id: int = Path(), db: AsyncSession = Depends(get_db)) -> DetailMailingStats | None:
+    mailing = await mailings.get_mailing_by_id(db, mailing_id)
     if not mailing:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                             detail="Mailing with this ID doesn't exists")
-    messages = crud.get_mailing_messages(mailing_id)
-    return DetailMailingStats(mailing=mailing, messages=messages)
+    return await stats.get_mailing_stats(db, mailing)

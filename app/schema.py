@@ -1,12 +1,14 @@
 from __future__ import annotations
 from datetime import datetime
+from typing import Any
+
 from pytz import all_timezones_set
 from enum import Enum
 from pydantic import BaseModel, Field, validator
 
 
 class HashableBaseModel(BaseModel):
-    def __hash__(self):
+    def __hash__(self) -> int:
         return id(self)
 
 
@@ -16,7 +18,7 @@ class MailingBase(HashableBaseModel):
     end_time: datetime
 
     class Config:
-        schema_extra = {
+        schema_extra: dict[str, Any] = {
             "example": {
                 "text": "string",
                 "start_time": "2022-12-29T21:52:48.840Z",
@@ -31,13 +33,15 @@ class Mailing(MailingBase):
     clients_mobile_operator_codes: list[int] = []
 
     class Config(MailingBase.Config):
+        orm_mode = True
+
         schema_extra = {
             **MailingBase.Config.schema_extra,
             **{
                 "example": {
                     **MailingBase.Config.schema_extra.get("example", {}),
                     **{
-                        "id": 0,
+                        "id": "0",
                         "clients_tags": [
                             {
                                 "text": "Any text"
@@ -53,8 +57,8 @@ class Mailing(MailingBase):
 
 
 class MailingIn(MailingBase):
-    clients_tags: list[MailingTagIn] = []
-    clients_mobile_operator_codes: list[int] = []
+    clients_tags: list[MailingTagIn]
+    clients_mobile_operator_codes: list[int]
 
     class Config(MailingBase.Config):
         schema_extra = {
@@ -126,7 +130,10 @@ class MailingTagBase(BaseModel):
 
 
 class MailingTag(MailingTagBase):
-    pass
+    id: int
+
+    class Config:
+        orm_mode = True
 
 
 class MailingTagOut(MailingTagBase):
@@ -143,7 +150,7 @@ class ClientBase(HashableBaseModel):
     timezone: str
 
     class Config:
-        schema_extra = {
+        schema_extra: dict[str, Any] = {
             "example": {
                 "phone_number": 79009999999,
                 "phone_operator_code": 900,
@@ -152,7 +159,7 @@ class ClientBase(HashableBaseModel):
         }
 
     @validator("timezone")
-    def timezone_exists(cls, timezone):
+    def timezone_exists(cls, timezone: str) -> str:
         if timezone not in all_timezones_set:
             raise ValueError("Timezone doesnt exist")
         return timezone
@@ -161,6 +168,9 @@ class ClientBase(HashableBaseModel):
 class Client(ClientBase):
     id: int
     tag: MailingTag
+
+    class Config:
+        orm_mode = True
 
 
 class ClientIn(ClientBase):
@@ -221,12 +231,15 @@ class Message(BaseModel):
     mailing_id: int
     client_id: int
 
+    class Config:
+        orm_mode = True
+
 
 class MailingStatsBase(BaseModel):
     messages: dict[MessageStatus, int]
 
     class Config:
-        schema_extra = {
+        schema_extra: dict[str, Any] = {
             "example": {
                 "messages": {
                     status: 0 for status in MessageStatus
