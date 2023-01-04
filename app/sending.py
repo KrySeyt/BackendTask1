@@ -2,6 +2,7 @@ from __future__ import annotations
 import asyncio
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import status
 
 from .endpoints import Endpoint
 
@@ -25,7 +26,7 @@ class Sending:
     async def _send(self, db: AsyncSession, endpoint: Endpoint, message: Message, client: Client) -> None:
         sleep_time = 0
         status_code = 0
-        while status_code < 200 or status_code >= 300:
+        while status_code != status.HTTP_200_OK:
             async with self.request_tasks_semaphore:
                 status_code = await endpoint.send(message, client, self.mailing)
             sleep_time += 20
