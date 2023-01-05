@@ -60,13 +60,13 @@ uvicorn app.main:app
 &ensp;&thinsp;&ensp;&thinsp;
 ✅
 `
-BACKENDTASK1_POSTGRESQL_URL=postgresql://scott:tiger@localhost:5432/mydatabase
+BACKENDTASK1_POSTGRESQL_URL='postgresql://scott:tiger@localhost:5432/mydatabase'
 `
 
 &ensp;&thinsp;&ensp;&thinsp;
 ❌
 `
-BACKENDTASK1_POSTGRESQL_URL=postgresql+psycopg2://scott:tiger@localhost:5432/mydatabase
+BACKENDTASK1_POSTGRESQL_URL='postgresql+psycopg2://scott:tiger@localhost:5432/mydatabase'
 `
 
 - ### BACKENDTASK1_ENDPOINT_URL
