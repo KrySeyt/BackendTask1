@@ -16,10 +16,37 @@ alembic upgrade head
 
 ⏱1. Tests
 
-⏱2. CI (required GitLab, but I prefer to GitHub in this case)
+⏱2. CI (required GitLab, but I prefer portfolio here)
 - ✅ MyPy
 - ⏱ Unit-tests
 
-✅ 5. Swagger
+✅ 5. Swagger (/docs/) and Redoc (/redoc/)
 
 ✅ 9. Handling incorrect external endpoint work
+
+### Setup:
+
+Clone repo
+```shell
+git clone https://github.com/KrySeyt/BackendTask1.git
+```
+
+Create venv
+```shell
+python -m venv BackendTask1
+```
+
+Activate venv
+```shell
+BackendTask1/Scripts/activate
+```
+
+Install dependencies
+```shell
+pip install -r -requirements.txt
+```
+
+Run server
+```shell
+uvicorn app.main:app
+```
