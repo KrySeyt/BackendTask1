@@ -15,8 +15,10 @@ from .endpoints import APIEndpoint, TestEndpoint
 app = FastAPI()
 
 
-# endpoint = APIEndpoint(r'https://httpbin.org/post/')
-endpoint = TestEndpoint()
+EXTERNAL_ENDPOINT: str | None = None
+
+
+endpoint = APIEndpoint(r'https://httpbin.org/post/') if EXTERNAL_ENDPOINT else TestEndpoint()
 db_session: AsyncSession = SessionLocal()
 
 
