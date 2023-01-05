@@ -50,3 +50,11 @@ Run server
 ```shell
 uvicorn app.main:app
 ```
+
+### External endpoint
+
+By default app "sends" messages just to console (`EXTERNAL_ENDPOINT = None`), to choose your endpoint open `main.py` and set EXTERNAL_ENDPOINT to your endpoint
+
+`
+EXTERNAL_ENDPOINT: str | None = r"https://httpbin.org/post"
+`
