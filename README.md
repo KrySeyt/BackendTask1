@@ -1,21 +1,25 @@
 # BackendTask1
 Task - https://www.craft.do/s/n6OVYFVUpq0o6L
 
-✅Checked by mypy by GitHub Actions:
+### ✅ Checked by mypy by GitHub Actions:
 ```shell
 mypy app --strict
 ```
 
-Migrations:
+### Migrations:
 ```shell
 alembic revision --autogenerate
 alembic upgrade head
 ```
 
-Additional tasks:
+### Additional tasks:
 
 ⏱1. Tests
 
-✅5. Swagger
+⏱2. CI (required GitLab, but I prefer to GitHub in this case)
+- ✅ MyPy
+- ⏱ Unit-tests
 
-✅9. Handling incorrect external endpoint work
+✅ 5. Swagger
+
+✅ 9. Handling incorrect external endpoint work
