@@ -10,7 +10,7 @@ from .schema import Mailing, Message, Client, MessageStatus
 from . import clients
 from . import messages
 
-EXTERNAL_SERVICE_ENDPOINT = r"https://httpbin.org/post"
+
 MAX_REQUESTS_AT_TIME = 20
 
 
