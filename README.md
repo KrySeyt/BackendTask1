@@ -1,7 +1,7 @@
 # BackendTask1
 Task - https://www.craft.do/s/n6OVYFVUpq0o6L
 
-Checked by mypy:
+✅Checked by mypy by GitHub Actions:
 ```shell
 mypy app --strict
 ```
