@@ -20,7 +20,7 @@ alembic upgrade head
 - ✅ MyPy
 - ⏱ Unit-tests
 
-✅ 5. Swagger (/docs/) and Redoc (/redoc/1
+✅ 5. Swagger (/docs/) and Redoc (/redoc/)
 
 ✅ 9. Handling incorrect external endpoint work
 
