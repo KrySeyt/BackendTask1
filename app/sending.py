@@ -13,6 +13,8 @@ from . import messages
 
 MAX_REQUESTS_AT_TIME = 20
 
+SUCCESSFUL_RESPONSE_CODES: set[int] = {status.HTTP_200_OK, status.HTTP_418_IM_A_TEAPOT}
+
 
 class Sending:
     sendings: dict[Mailing, Sending] = dict()
@@ -26,7 +28,7 @@ class Sending:
     async def _send(self, db: AsyncSession, endpoint: Endpoint, message: Message, client: Client) -> None:
         sleep_time = 0
         status_code = 0
-        while status_code != status.HTTP_200_OK:
+        while status_code not in SUCCESSFUL_RESPONSE_CODES:
             async with self.request_tasks_semaphore:
                 try:
                     status_code = await endpoint.send(message, client, self.mailing)

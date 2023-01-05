@@ -73,3 +73,18 @@ app/database.py:
 `
 DATABASE_POSTGRESQL_ENV_VAR_NAME: str = "AnyNameForYourPostgresqlURLEnvVar"
 `
+
+#### Endpoint successful response codes
+
+By default:
+- 200
+
+##### Setup your own successful status codes set
+
+`
+app/sending.py:
+`
+
+`
+SUCCESSFUL_RESPONSE_CODES: set[int] = set(status.HTTP_200_OK, status.HTTP_418_IM_A_TEAPOT)
+`
