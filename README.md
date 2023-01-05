@@ -1,18 +1,18 @@
 # BackendTask1
 Task - https://www.craft.do/s/n6OVYFVUpq0o6L
 
-### ✅ Checked by mypy by GitHub Actions:
+## ✅ Checked by mypy by GitHub Actions:
 ```shell
 mypy app --strict
 ```
 
-### Migrations:
+## Migrations:
 ```shell
 alembic revision --autogenerate
 alembic upgrade head
 ```
 
-### Additional tasks:
+## Additional tasks:
 
 ⏱1. Tests
 
@@ -24,7 +24,7 @@ alembic upgrade head
 
 ✅ 9. Handling incorrect external endpoint work
 
-### Setup:
+## Setup:
 
 Clone repo
 ```shell
@@ -51,9 +51,9 @@ Run server
 uvicorn app.main:app
 ```
 
-### Configuration
+## Configuration
 
-#### External endpoint
+### External endpoint
 
 By default app "sends" messages just to console (`EXTERNAL_ENDPOINT = None`), to choose your endpoint open `main.py` and set EXTERNAL_ENDPOINT to your endpoint
 
@@ -61,11 +61,11 @@ By default app "sends" messages just to console (`EXTERNAL_ENDPOINT = None`), to
 EXTERNAL_ENDPOINT: str | None = r"https://httpbin.org/post"
 `
 
-#### Postgresql
+### Postgresql
 
 Set environment variable `BackendTask1HerokuPostgresURL` with Heroku or another url to postresql database
 
-##### Renaming environment variable:
+#### Renaming environment variable:
 `
 app/database.py:
 `
@@ -74,12 +74,12 @@ app/database.py:
 DATABASE_POSTGRESQL_ENV_VAR_NAME: str = "AnyNameForYourPostgresqlURLEnvVar"
 `
 
-#### Endpoint successful response codes
+### Endpoint successful response codes
 
 By default:
 - 200
 
-##### Setup your own successful status codes set
+#### Setup your own successful status codes set
 
 `
 app/sending.py:
@@ -87,4 +87,22 @@ app/sending.py:
 
 `
 SUCCESSFUL_RESPONSE_CODES: set[int] = set(status.HTTP_200_OK, status.HTTP_418_IM_A_TEAPOT)
+`
+
+
+### Max request to endpoint at time
+
+Default:
+`
+MAX_REQUESTS_AT_TIME = 20
+`
+
+#### Changing max request at time count:
+
+`
+app/sending.py:
+`
+
+`
+MAX_REQUESTS_AT_TIME = 150
 `
