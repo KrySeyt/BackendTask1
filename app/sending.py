@@ -7,18 +7,14 @@ from fastapi import status
 from .endpoints import Endpoint
 
 from .schema import Mailing, Message, Client, MessageStatus
+from .config import get_settings
 from . import clients
 from . import messages
 
 
-MAX_REQUESTS_AT_TIME = 20
-
-SUCCESSFUL_RESPONSE_CODES: set[int] = {status.HTTP_200_OK, status.HTTP_418_IM_A_TEAPOT}
-
-
 class Sending:
     sendings: dict[Mailing, Sending] = dict()
-    request_tasks_semaphore = asyncio.Semaphore(MAX_REQUESTS_AT_TIME)
+    request_tasks_semaphore = asyncio.Semaphore(get_settings().max_requests_at_time)
 
     def __init__(self, mailing: Mailing):
         self.mailing = mailing
@@ -28,7 +24,7 @@ class Sending:
     async def _send(self, db: AsyncSession, endpoint: Endpoint, message: Message, client: Client) -> None:
         sleep_time = 0
         status_code = 0
-        while status_code not in SUCCESSFUL_RESPONSE_CODES:
+        while status_code not in get_settings().successful_status_codes:
             async with self.request_tasks_semaphore:
                 try:
                     status_code = await endpoint.send(message, client, self.mailing)

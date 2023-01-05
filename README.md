@@ -20,89 +20,82 @@ alembic upgrade head
 - ✅ MyPy
 - ⏱ Unit-tests
 
-✅ 5. Swagger (/docs/) and Redoc (/redoc/)
+✅ 5. Swagger (/docs/) and Redoc (/redoc/1
 
 ✅ 9. Handling incorrect external endpoint work
 
 ## Setup:
 
-Clone repo
+- Clone repo
 ```shell
 git clone https://github.com/KrySeyt/BackendTask1.git
 ```
 
-Create venv
+- Create venv
 ```shell
 python -m venv BackendTask1
 ```
 
-Activate venv
+- Activate venv
 ```shell
 BackendTask1/Scripts/activate
 ```
 
-Install dependencies
+- Install dependencies
 ```shell
 pip install -r -requirements.txt
 ```
 
-Run server
+- Run server
 ```shell
 uvicorn app.main:app
 ```
 
-## Configuration
+## Configuration (Environment vars)
+    Varibles names case doesn't matter
 
-### External endpoint
+- ### BACKENDTASK1_POSTGRESQL_URL
+    Url to your postgresql database without driver
 
-By default app "sends" messages just to console (`EXTERNAL_ENDPOINT = None`), to choose your endpoint open `main.py` and set EXTERNAL_ENDPOINT to your endpoint
-
+&ensp;&thinsp;&ensp;&thinsp;
+✅
 `
-EXTERNAL_ENDPOINT: str | None = r"https://httpbin.org/post"
-`
-
-### Postgresql
-
-Set environment variable `BackendTask1HerokuPostgresURL` with Heroku or another url to postresql database
-
-#### Renaming environment variable:
-`
-app/database.py:
+BACKENDTASK1_POSTGRESQL_URL=postgresql://scott:tiger@localhost:5432/mydatabase
 `
 
+&ensp;&thinsp;&ensp;&thinsp;
+❌
 `
-DATABASE_POSTGRESQL_ENV_VAR_NAME: str = "AnyNameForYourPostgresqlURLEnvVar"
-`
-
-### Endpoint successful response codes
-
-By default:
-- 200
-
-#### Setup your own successful status codes set
-
-`
-app/sending.py:
+BACKENDTASK1_POSTGRESQL_URL=postgresql+psycopg2://scott:tiger@localhost:5432/mydatabase
 `
 
+- ### BACKENDTASK1_ENDPOINT_URL
+  Any http/https url for post requests according to https://probe.fbrq.cloud/docs#/send/sendMsg doc
+
+  #### Default = `None`
+  ##### If value is `None`, messages will "sends" just to console
+
+&ensp;&thinsp;&ensp;&thinsp;
 `
-SUCCESSFUL_RESPONSE_CODES: set[int] = set(status.HTTP_200_OK, status.HTTP_418_IM_A_TEAPOT)
+BACKENDTASK1_ENDPOINT_URL='https://httpbin.org/post'
 `
 
+- ### BACKENDTASK1_SUCCESSFUL_STATUS_CODES
+  list of status codes which will be considered as the result of a successful sending
 
-### Max request to endpoint at time
+  #### Default = [200]
 
-Default:
+&ensp;&thinsp;&ensp;&thinsp;
 `
-MAX_REQUESTS_AT_TIME = 20
-`
-
-#### Changing max request at time count:
-
-`
-app/sending.py:
+BACKENDTASK1_SUCCESSFUL_STATUS_CODES='["200", "418"]'
 `
 
+- ### BACKENDTASK1_MAX_REQUESTS_AT_TIME
+  number of requests to external endpoint that can be processed at one time
+  
+  #### Default = 20
+
+&ensp;&thinsp;&ensp;&thinsp;
 `
-MAX_REQUESTS_AT_TIME = 150
+BACKENDTASK1_MAX_REQUESTS_AT_TIME='50'
 `

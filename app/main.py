@@ -8,17 +8,18 @@ from .schema import ClientIn, ClientOut, ClientInWithID, MailingOut, MailingIn, 
     MailingStatsOut, DetailMailingStatsOut, Client, Mailing, MailingStats, DetailMailingStats
 from . import mailings, stats
 from . import clients
+from .config import get_settings
 from .database import SessionLocal
 from .schedule import Schedule
 from .endpoints import APIEndpoint, TestEndpoint
 
+
+EXTERNAL_ENDPOINT_URL: str | None = get_settings().endpoint_url
+
 app = FastAPI()
 
+endpoint = APIEndpoint(EXTERNAL_ENDPOINT_URL) if EXTERNAL_ENDPOINT_URL else TestEndpoint()
 
-EXTERNAL_ENDPOINT: str | None = None
-
-
-endpoint = APIEndpoint(r'https://httpbin.org/post/') if EXTERNAL_ENDPOINT else TestEndpoint()
 db_session: AsyncSession = SessionLocal()
 
 
