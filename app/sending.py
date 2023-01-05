@@ -28,7 +28,10 @@ class Sending:
         status_code = 0
         while status_code != status.HTTP_200_OK:
             async with self.request_tasks_semaphore:
-                status_code = await endpoint.send(message, client, self.mailing)
+                try:
+                    status_code = await endpoint.send(message, client, self.mailing)
+                except asyncio.TimeoutError:
+                    pass
             sleep_time += 20
             await asyncio.sleep(sleep_time)
         message.status = MessageStatus.delivered
