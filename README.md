@@ -18,6 +18,7 @@ alembic upgrade head
 
 ⏱2. CI (required GitLab, but I prefer portfolio here)
 - ✅ MyPy
+- ✅ Deepsource (https://deepsource.io/)
 - ⏱ Unit-tests
 
 ✅ 5. Swagger (/docs/) and Redoc (/redoc/)
