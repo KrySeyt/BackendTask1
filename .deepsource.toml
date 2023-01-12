@@ -1,5 +1,10 @@
 version = 1
 
+exclude_patterns = [
+  ".github/**",
+  "alembic/**",
+]
+
 [[analyzers]]
 name = "python"
 
