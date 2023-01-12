@@ -37,12 +37,10 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
 
 @app.on_event("shutdown")
 async def close_db_session() -> None:
-    global db_session
     await db_session.close()
 
 
 async def get_db() -> AsyncSession:
-    global db_session
     return db_session
 
 

@@ -186,36 +186,3 @@ async def create_message(db: AsyncSession, mailing: schema.Mailing, client: sche
     await db.commit()
     await db.refresh(message)
     return message
-
-
-# async def main() -> None:
-#     from database import SessionLocal
-#     from sqlalchemy.ext.asyncio import AsyncSession
-#     from datetime import datetime
-#     from schema import MailingInWithID, MailingTagIn
-#
-#     session: AsyncSession = SessionLocal()
-#     try:
-#         mailing = schema.MailingInWithID(
-#                                   id=16,
-#                                   text="Another ez",
-#                                   start_time=datetime.now(),
-#                                   end_time=datetime.now(),
-#                                   clients_tags=[MailingTagIn(text="New tag text"), MailingTagIn(text="Another tag text")],
-#                                   clients_mobile_operator_codes=[900])
-#         # mailing = schema.MailingIn(
-#         #                           text="New ez",
-#         #                           start_time=datetime.now(),
-#         #                           end_time=datetime.now(),
-#         #                           clients_tags=[MailingTagIn(text="tag text"), MailingTagIn(text="Another tag text")],
-#         #                           clients_mobile_operator_codes=[900])
-#         # await create_mailing(session, mailing)
-#         db_mailing = await update_mailing(session, mailing)
-#         print(db_mailing)
-#     finally:
-#         await session.close()
-#
-#
-# if __name__ == '__main__':
-#     import asyncio
-#     asyncio.run(main())

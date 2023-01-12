@@ -70,19 +70,3 @@ async def get_mailing_by_id(db: AsyncSession, mailing_id: int) -> schema.Mailing
     if not db_mailing:
         return None
     return schema.Mailing.from_orm(db_mailing)
-
-
-# async def main() -> None:
-#     from database import SessionLocal
-#     from sqlalchemy.ext.asyncio import AsyncSession
-#
-#     session: AsyncSession = SessionLocal()
-#     try:
-#         mailings = await get_all_mailings(session)
-#         print(mailings)
-#     finally:
-#         await session.close()
-#
-#
-# if __name__ == '__main__':
-#     asyncio.run(main())

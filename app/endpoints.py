@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-from fastapi import status
 import aiohttp
 
 from app.schema import Message, Client, Mailing

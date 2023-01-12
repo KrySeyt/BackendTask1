@@ -2,7 +2,6 @@ from __future__ import annotations
 import asyncio
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import status
 
 from .endpoints import Endpoint
 
@@ -13,7 +12,7 @@ from . import messages
 
 
 class Sending:
-    sendings: dict[Mailing, Sending] = dict()
+    sendings: dict[Mailing, Sending] = {}
     request_tasks_semaphore = asyncio.Semaphore(get_settings().max_requests_at_time)
 
     def __init__(self, mailing: Mailing):
