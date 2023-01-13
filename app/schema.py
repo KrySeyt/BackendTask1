@@ -146,7 +146,7 @@ class MailingTagIn(MailingTagBase):
 
 
 class ClientBase(HashableBaseModel):
-    phone_number: str
+    phone_number: str  # TODO: Field(example=...)
     phone_operator_code: int
     timezone: str
 

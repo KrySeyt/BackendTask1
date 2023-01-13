@@ -1,7 +1,7 @@
 import datetime
 from typing import Sequence
 
-from phonenumbers import PhoneNumber
+from sqlalchemy_utils import PhoneNumber
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 

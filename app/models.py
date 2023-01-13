@@ -2,12 +2,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Sequence, Iterable
 
-from phonenumbers import PhoneNumber
 from sqlalchemy import Column, String, Integer, DateTime, Enum, ForeignKey, Table
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import relationship
-from sqlalchemy_utils import PhoneNumberType
+from sqlalchemy_utils import PhoneNumberType, PhoneNumber
 
 from .database import Base
 from .schema import MessageStatus
