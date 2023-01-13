@@ -4,7 +4,8 @@ from typing import Any
 
 from pytz import all_timezones_set
 from enum import Enum
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, validator
+from sqlalchemy_utils import PhoneNumber
 
 
 class HashableBaseModel(BaseModel):
@@ -18,7 +19,7 @@ class MailingBase(HashableBaseModel):
     end_time: datetime
 
     class Config:
-        schema_extra: dict[str, Any] = {
+        schema_extra = {
             "example": {
                 "text": "string",
                 "start_time": "2022-12-29T21:52:48.840Z",
@@ -35,7 +36,7 @@ class Mailing(MailingBase):
     class Config(MailingBase.Config):
         orm_mode = True
 
-        schema_extra = {
+        schema_extra: dict[str, Any] = {
             **MailingBase.Config.schema_extra,
             **{
                 "example": {
@@ -145,14 +146,15 @@ class MailingTagIn(MailingTagBase):
 
 
 class ClientBase(HashableBaseModel):
-    phone_number: int = Field(ge=70000000000, le=79999999999)
+    phone_number: str
     phone_operator_code: int
     timezone: str
 
     class Config:
-        schema_extra: dict[str, Any] = {
+        arbitrary_types_allowed = True
+        schema_extra = {
             "example": {
-                "phone_number": 79009999999,
+                "phone_number": "+79009999999",
                 "phone_operator_code": 900,
                 "timezone": "Europe/Amsterdam",
             }
@@ -161,8 +163,16 @@ class ClientBase(HashableBaseModel):
     @validator("timezone")
     def timezone_exists(cls, timezone: str) -> str:
         if timezone not in all_timezones_set:
-            raise ValueError("Timezone doesnt exist")
+            raise ValueError("Timezone doesn't exist")
         return timezone
+
+    @validator("phone_number", pre=True)
+    def phone_number_correct(cls, phone_number: str | PhoneNumber) -> str:
+        if isinstance(phone_number, PhoneNumber):
+            phone_number = phone_number.e164
+        if int(phone_number) < 70000000000 or int(phone_number) > 79999999999:
+            raise ValueError("Phone number is incorrect")
+        return phone_number
 
 
 class Client(ClientBase):
@@ -239,7 +249,7 @@ class MailingStatsBase(BaseModel):
     messages: dict[MessageStatus, int]
 
     class Config:
-        schema_extra: dict[str, Any] = {
+        schema_extra = {
             "example": {
                 "messages": {
                     status: 0 for status in MessageStatus

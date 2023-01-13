@@ -107,7 +107,7 @@ class Client(Base):
     @classmethod
     async def create(cls,
                      db: AsyncSession,
-                     phone_number: int,
+                     phone_number: str,
                      phone_operator_code: int,
                      tag_text: str,
                      timezone: str) -> Client:
@@ -118,7 +118,7 @@ class Client(Base):
             await db.commit()
             await db.refresh(tag)
         return cls(
-            phone_number=PhoneNumber(phone_number),
+            phone_number=phone_number,
             phone_operator_code=phone_operator_code,
             tag_id=tag.id,
             tag=tag,
