@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .schema import ClientIn, ClientOut, ClientInWithID, MailingOut, MailingIn, MailingInWithID, \
-    MailingStatsOut, DetailMailingStatsOut, Client, Mailing, MailingStats, DetailMailingStats
+    MailingStatsOut, DetailMailingStatsOut, Client, Mailing, MailingStats, DetailMailingStats, ValidationErrorSchema
 from . import mailings, stats
 from . import clients
 from .config import get_settings
@@ -14,13 +14,13 @@ from .schedule import Schedule
 from .endpoints import APIEndpoint, TestEndpoint
 
 
-EXTERNAL_ENDPOINT_URL: str | None = get_settings().endpoint_url
-
-app = FastAPI()
+EXTERNAL_ENDPOINT_URL = get_settings().endpoint_url
 
 endpoint = APIEndpoint(EXTERNAL_ENDPOINT_URL) if EXTERNAL_ENDPOINT_URL else TestEndpoint()
 
 db_session: AsyncSession = SessionLocal()
+
+app = FastAPI()
 
 
 @app.exception_handler(RequestValidationError)
@@ -54,78 +54,55 @@ async def mailings_in_db_to_schedule() -> None:
 
 @app.post("/client/",
           response_model=ClientOut,
-          tags=["client"])
+          tags=["client"],
+          responses={422: {"model": ValidationErrorSchema}}
+          )
 async def create_client(client_in: ClientIn, db: AsyncSession = Depends(get_db)) -> Client:
     client = await clients.create_client(db, client_in)
     return client
 
 
 @app.put("/client/",
-         response_model=ClientOut,
+         response_model=ClientOut | None,
          tags=["client"],
-         responses={
-             422: {
-                 "description": "Client with this is doesn't exist",
-                 "content": {
-                     "application/json": {
-                         "example": {"detail": "This client doesn't exists"}
-                     }
-                 }
-             }
-         })
+         responses={422: {"model": ValidationErrorSchema}, 404: {}}
+         )
 async def update_client(client: ClientInWithID, db: AsyncSession = Depends(get_db)) -> Client | None:
     db_client = await clients.get_client_by_id(db, client.id)
     if not db_client:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="This client doesn't exists")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return await clients.update_client(db, client)
 
 
 @app.get("/client/{client_id}",
          response_model=ClientOut,
          tags=["client"],
-         responses={
-             422: {
-                 "description": "Wrong ID",
-                 "content": {
-                     "application/json": {
-                         "example": {"detail": "Wrong ID"}
-                     }
-                 },
-             }
-         })
+         responses={422: {"model": ValidationErrorSchema}, 404: {}}
+         )
 async def get_client(client_id: int = Path(), db: AsyncSession = Depends(get_db)) -> Client:
     client = await clients.get_client_by_id(db, client_id)
     if not client:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="Wrong ID")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return client
 
 
 @app.delete("/client/{client_id}",
             response_model=ClientOut,
             tags=["client"],
-            responses={
-                422: {
-                    "description": "Wrong ID",
-                    "content": {
-                        "application/json": {
-                            "example": {"detail": "Client with this ID doesnt exists"}
-                        }
-                    },
-                }
-            })
+            responses={422: {"model": ValidationErrorSchema}, 404: {}}
+            )
 async def delete_client(client_id: int = Path(), db: AsyncSession = Depends(get_db)) -> Client | None:
     client = await clients.get_client_by_id(db, client_id)
     if not client:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="Client with this ID doesnt exists")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return await clients.delete_client(db, client_id)
 
 
 @app.get("/clients/",
          response_model=list[ClientOut],
-         tags=["client"])
+         tags=["client"],
+         responses={422: {"model": ValidationErrorSchema}}
+         )
 async def get_clients(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)) -> list[Client]:
     clients_list = await clients.get_clients(db, skip, limit)
     return clients_list
@@ -133,7 +110,9 @@ async def get_clients(skip: int = 0, limit: int = 100, db: AsyncSession = Depend
 
 @app.post("/mailing/",
           tags=["mailing"],
-          response_model=MailingOut)
+          response_model=MailingOut,
+          responses={422: {"model": ValidationErrorSchema}}
+          )
 async def create_mailing(mailing: MailingIn, db: AsyncSession = Depends(get_db)) -> Mailing:
     return await mailings.create_mailing(db, mailing, endpoint)
 
@@ -141,69 +120,43 @@ async def create_mailing(mailing: MailingIn, db: AsyncSession = Depends(get_db))
 @app.delete("/mailing/{mailing_id}",
             tags=["mailing"],
             response_model=MailingOut,
-            responses={
-                422: {
-                    "description": "Wrong ID",
-                    "content": {
-                        "application/json": {
-                            "example": {"detail": "Mailing with this ID doesnt exists"}
-                        }
-                    },
-                }
-            })
+            responses={422: {"model": ValidationErrorSchema}, 404: {}}
+            )
 async def delete_mailing(mailing_id: int = Path(), db: AsyncSession = Depends(get_db)) -> Mailing:
     mailing = await mailings.get_mailing_by_id(db, mailing_id)
     if not mailing:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="Mailing with this ID doesn't exists")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return await mailings.delete_mailing(db, mailing)
 
 
 @app.put("/mailing/",
          tags=["mailing"],
          response_model=MailingOut,
-         responses={
-             422: {
-                 "description": "Wrong ID",
-                 "content": {
-                     "application/json": {
-                         "example": {"detail": "Mailing with this ID doesn't exists"}
-                     }
-                 },
-             }
-         })
+         responses={422: {"model": ValidationErrorSchema}, 404: {}}
+         )
 async def update_mailing(mailing: MailingInWithID, db: AsyncSession = Depends(get_db)) -> Mailing | None:
     mailing_in_db = await mailings.get_mailing_by_id(db, mailing.id)
     if not mailing_in_db:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="Mailing with this ID doesn't exists")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return await mailings.update_mailing(db, mailing, endpoint)
 
 
 @app.get("/mailing/{mailing_id}",
          response_model=MailingOut,
          tags=["mailing"],
-         responses={
-             422: {
-                 "description": "Wrong ID",
-                 "content": {
-                     "application/json": {
-                         "example": {"detail": "Mailing with this ID doesn't exists"}
-                     }
-                 },
-             }
-         })
+         responses={422: {"model": ValidationErrorSchema}, 404: {}}
+         )
 async def get_mailing(mailing_id: int = Path(), db: AsyncSession = Depends(get_db)) -> Mailing:
     mailing = await mailings.get_mailing_by_id(db, mailing_id)
     if not mailing:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            "Mailing with this ID doesn't exists")
+        raise HTTPException(status.HTTP_404_NOT_FOUND)
     return mailing
 
 
 @app.get("/stats/",
          tags=["stats"],
-         response_model=list[MailingStatsOut])
+         response_model=list[MailingStatsOut],
+         )
 async def get_stats(db: AsyncSession = Depends(get_db)) -> list[MailingStats]:
     return await stats.get_stats(db)
 
@@ -211,19 +164,10 @@ async def get_stats(db: AsyncSession = Depends(get_db)) -> list[MailingStats]:
 @app.get("/stats/{mailing_id}",
          tags=["stats"],
          response_model=DetailMailingStatsOut,
-         responses={
-             422: {
-                 "description": "Wrong ID",
-                 "content": {
-                     "application/json": {
-                         "example": {"detail": "Mailing with this ID desn't exists"}
-                     }
-                 },
-             }
-         })
+         responses={422: {"model": ValidationErrorSchema}, 404: {}}
+         )
 async def get_mailing_stats(mailing_id: int = Path(), db: AsyncSession = Depends(get_db)) -> DetailMailingStats | None:
     mailing = await mailings.get_mailing_by_id(db, mailing_id)
     if not mailing:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="Mailing with this ID doesn't exists")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return await stats.get_mailing_stats(db, mailing)

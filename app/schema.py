@@ -1,10 +1,10 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import Any
+from typing import Any, Generic
 
 from pytz import all_timezones_set
 from enum import Enum
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 from sqlalchemy_utils import PhoneNumber
 
 
@@ -14,18 +14,9 @@ class HashableBaseModel(BaseModel):
 
 
 class MailingBase(HashableBaseModel):
-    text: str
+    text: str = Field(example="Mailing text")
     start_time: datetime
     end_time: datetime
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "text": "string",
-                "start_time": "2022-12-29T21:52:48.840Z",
-                "end_time": "2022-12-29T21:52:48.840Z",
-            }
-        }
 
 
 class Mailing(MailingBase):
@@ -33,101 +24,27 @@ class Mailing(MailingBase):
     clients_tags: list[MailingTag] = []
     clients_mobile_operator_codes: list[int] = []
 
-    class Config(MailingBase.Config):
+    class Config:
         orm_mode = True
-
-        schema_extra: dict[str, Any] = {
-            **MailingBase.Config.schema_extra,
-            **{
-                "example": {
-                    **MailingBase.Config.schema_extra.get("example", {}),
-                    **{
-                        "id": "0",
-                        "clients_tags": [
-                            {
-                                "text": "Any text"
-                            }
-                        ],
-                        "clients_mobile_operator_codes": [
-                            900, 910
-                        ]
-                    }
-                }
-            }
-        }
 
 
 class MailingIn(MailingBase):
     clients_tags: list[MailingTagIn]
-    clients_mobile_operator_codes: list[int]
-
-    class Config(MailingBase.Config):
-        schema_extra = {
-            **MailingBase.Config.schema_extra,
-            **{
-                "example": {
-                    **MailingBase.Config.schema_extra.get("example", {}),
-                    **{
-                        "clients_tags": [
-                            {
-                                "text": "Any text"
-                            }
-                        ],
-                        "clients_mobile_operator_codes": [
-                            900, 910
-                        ]
-                    }
-                }
-            }
-        }
+    clients_mobile_operator_codes: list[int] = Field(example=[900, 910])
 
 
 class MailingInWithID(MailingIn):
     id: int
 
-    class Config(MailingIn.Config):
-        schema_extra = {
-            **MailingIn.Config.schema_extra,
-            **{
-                "example": {
-                    **MailingIn.Config.schema_extra.get("example", {}),
-                    **{
-                        "id": 0
-                    }
-                }
-            }
-        }
-
 
 class MailingOut(MailingBase):
     id: int
     clients_tags: list[MailingTagOut] = []
-    clients_mobile_operator_codes: list[int] = []
-
-    class Config(MailingBase.Config):
-        schema_extra = {
-            **MailingBase.Config.schema_extra,
-            **{
-                "example": {
-                    **MailingBase.Config.schema_extra.get("example", {}),
-                    **{
-                        "id": 0,
-                        "clients_tags": [
-                            {
-                                "text": "Any text"
-                            }
-                        ],
-                        "clients_mobile_operator_codes": [
-                            900, 910
-                        ]
-                    }
-                }
-            }
-        }
+    clients_mobile_operator_codes: list[int] = Field(example=[900, 910])
 
 
 class MailingTagBase(BaseModel):
-    text: str
+    text: str = Field(example="Any text")
 
 
 class MailingTag(MailingTagBase):
@@ -146,19 +63,9 @@ class MailingTagIn(MailingTagBase):
 
 
 class ClientBase(HashableBaseModel):
-    phone_number: str  # TODO: Field(example=...)
-    phone_operator_code: int
-    timezone: str
-
-    class Config:
-        arbitrary_types_allowed = True
-        schema_extra = {
-            "example": {
-                "phone_number": "+79009999999",
-                "phone_operator_code": 900,
-                "timezone": "Europe/Amsterdam",
-            }
-        }
+    phone_number: str = Field(example="+79009999999")
+    phone_operator_code: int = Field(example=900)
+    timezone: str = Field(example="Europe/Amsterdam")
 
     @validator("timezone")
     def timezone_exists(cls, timezone: str) -> str:
@@ -186,47 +93,14 @@ class Client(ClientBase):
 class ClientIn(ClientBase):
     tag: MailingTagIn
 
-    class Config:
-        schema_extra = {
-            **ClientBase.Config.schema_extra,
-            **{
-                "example": {
-                    **ClientBase.Config.schema_extra.get("example", {}),
-                    **{
-                        "tag":
-                            {
-                                "text": "Any text"
-                            }
-                    }
-                }
-            }
-        }
-
 
 class ClientInWithID(ClientIn):
-    id: int
-    tag: MailingTagIn
+    id: int = Field(example=0)
 
 
 class ClientOut(ClientBase):
-    id: int
+    id: int = Field(example=0)
     tag: MailingTagOut
-
-    class Config:
-        schema_extra = {
-            **ClientBase.Config.schema_extra,
-            **{
-                "example": {
-                    **ClientBase.Config.schema_extra.get("example", {}),
-                    **{
-                        "tag":
-                            {
-                                "text": "Any text"
-                            }
-                    }
-                }
-            }
-        }
 
 
 class MessageStatus(Enum):
@@ -246,40 +120,17 @@ class Message(BaseModel):
 
 
 class MailingStatsBase(BaseModel):
-    messages: dict[MessageStatus, int]
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "messages": {
-                    status: 0 for status in MessageStatus
-                }
-            }
-        }
+    messages: dict[MessageStatus, int] = Field(
+        example={status: 0 for status in MessageStatus}
+    )
 
 
 class MailingStats(MailingStatsBase):
     mailing: Mailing
 
-    class Config:
-        schema_extra = {
-            "example": {
-                **MailingStatsBase.Config.schema_extra.get("example", {}),
-                "mailing": Mailing.Config.schema_extra.get("example", {}),
-            }
-        }
-
 
 class MailingStatsOut(MailingStatsBase):
     mailing: MailingOut
-
-    class Config:
-        schema_extra = {
-            "example": {
-                **MailingStatsBase.Config.schema_extra.get("example", {}),
-                "mailing": MailingOut.Config.schema_extra.get("example", {}),
-            }
-        }
 
 
 class DetailMailingStatsBase(BaseModel):
@@ -292,6 +143,30 @@ class DetailMailingStats(DetailMailingStatsBase):
 
 class DetailMailingStatsOut(DetailMailingStatsBase):
     mailing: MailingOut
+
+
+class ValidationErrorSchema(BaseModel):
+    detail: list[dict[str, Any]] = Field(description="Default detail of validation error", example=[
+        {
+            "loc": [
+                "body",
+                "phone_number"
+            ],
+            "msg": "field required",
+            "type": "value_error.missing",
+        }
+    ])
+    body: dict[str, Any] = Field(description="Body of your request", example={
+        "phone_operator_code": 900,
+        "timezone": "Europe/Amsterdam",
+        "id": 0,
+        "tag": {
+            "text": "Any text"
+        }
+    })
+    params: dict[str, Any] = Field(description="Path and query parameters of your request", example={
+        "deprecated_param": 1
+    })
 
 
 Mailing.update_forward_refs()
