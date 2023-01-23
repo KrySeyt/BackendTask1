@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import Any, Generic
+from typing import Any
 
 from pytz import all_timezones_set
 from enum import Enum

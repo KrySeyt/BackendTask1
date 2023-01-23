@@ -11,6 +11,7 @@ from sqlalchemy_utils import PhoneNumberType, PhoneNumber
 from .database import Base
 from .schema import MessageStatus
 
+
 mailings_and_mailing_tags_association = Table(
     "mailings_and_mailing_tags_table",
     Base.metadata,

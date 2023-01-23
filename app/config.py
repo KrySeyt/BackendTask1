@@ -14,6 +14,6 @@ class Settings(BaseSettings):
         env_prefix = "BackendTask1_"
 
 
-@lru_cache()
+@lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()

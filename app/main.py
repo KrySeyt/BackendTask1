@@ -16,9 +16,7 @@ from .endpoints import APIEndpoint, TestEndpoint
 
 EXTERNAL_ENDPOINT_URL = get_settings().endpoint_url
 
-endpoint = APIEndpoint(EXTERNAL_ENDPOINT_URL) if EXTERNAL_ENDPOINT_URL else TestEndpoint()
-
-db_session: AsyncSession = SessionLocal()
+endpoint = APIEndpoint(EXTERNAL_ENDPOINT_URL) if EXTERNAL_ENDPOINT_URL else TestEndpoint()  # TODO: Make this through DI
 
 app = FastAPI()
 
@@ -35,13 +33,19 @@ async def validation_error_handler(request: Request, exc: RequestValidationError
     )
 
 
+async def get_db() -> AsyncSession:
+    if hasattr(get_db, "db"):
+        db: AsyncSession = get_db.db
+        return db
+    db = SessionLocal()
+    setattr(get_db, "db", db)
+    return db
+
+
 @app.on_event("shutdown")
 async def close_db_session() -> None:
-    await db_session.close()
-
-
-async def get_db() -> AsyncSession:
-    return db_session
+    db = await get_db()
+    await db.close()
 
 
 @app.on_event("startup")
