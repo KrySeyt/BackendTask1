@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from fastapi import FastAPI, Request, status, Path, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -11,12 +13,7 @@ from . import clients
 from .config import get_settings
 from .database import SessionLocal
 from .schedule import Schedule
-from .endpoints import APIEndpoint, TestEndpoint
-
-
-EXTERNAL_ENDPOINT_URL = get_settings().endpoint_url
-
-endpoint = APIEndpoint(EXTERNAL_ENDPOINT_URL) if EXTERNAL_ENDPOINT_URL else TestEndpoint()  # TODO: Make this through DI
+from .endpoints import APIEndpoint, TestEndpoint, Endpoint
 
 app = FastAPI()
 
@@ -48,12 +45,19 @@ async def close_db_session() -> None:
     await db.close()
 
 
+@lru_cache(maxsize=1)
+async def get_endpoint() -> Endpoint:
+    endpoint_url = get_settings().endpoint_url
+    endpoint = APIEndpoint(endpoint_url) if endpoint_url else TestEndpoint()
+    return endpoint
+
+
 @app.on_event("startup")
 async def mailings_in_db_to_schedule() -> None:
     db = await get_db()
     all_mailings = await mailings.get_all_mailings(db)
     for mailing in all_mailings:
-        await Schedule.add_mailing_to_schedule(db, mailing, endpoint)
+        await Schedule.add_mailing_to_schedule(db, mailing, await get_endpoint())
 
 
 @app.post("/client/",
@@ -117,7 +121,9 @@ async def get_clients(skip: int = 0, limit: int = 100, db: AsyncSession = Depend
           response_model=MailingOut,
           responses={422: {"model": ValidationErrorSchema}}
           )
-async def create_mailing(mailing: MailingIn, db: AsyncSession = Depends(get_db)) -> Mailing:
+async def create_mailing(mailing: MailingIn,
+                         db: AsyncSession = Depends(get_db),
+                         endpoint: Endpoint = Depends(get_endpoint)) -> Mailing:
     return await mailings.create_mailing(db, mailing, endpoint)
 
 
@@ -138,7 +144,9 @@ async def delete_mailing(mailing_id: int = Path(), db: AsyncSession = Depends(ge
          response_model=MailingOut,
          responses={422: {"model": ValidationErrorSchema}, 404: {}}
          )
-async def update_mailing(mailing: MailingInWithID, db: AsyncSession = Depends(get_db)) -> Mailing | None:
+async def update_mailing(mailing: MailingInWithID,
+                         db: AsyncSession = Depends(get_db),
+                         endpoint: Endpoint = Depends(get_endpoint)) -> Mailing | None:
     mailing_in_db = await mailings.get_mailing_by_id(db, mailing.id)
     if not mailing_in_db:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
