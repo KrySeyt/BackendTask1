@@ -55,7 +55,7 @@ BACKENDTASK1_POSTGRESQL_URL=<POSTGRESQL_URL> uvicorn app.main:app
 ## Configuration (Environment vars)
     Varibles names case doesn't matter
 
-- ### BACKENDTASK1_POSTGRESQL_URL
+- ### BACKENDTASK1_POSTGRESQL_URL (*required*)
     Url to your postgresql database without driver
 
 &ensp;&thinsp;&ensp;&thinsp;
