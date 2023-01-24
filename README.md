@@ -49,7 +49,7 @@ pip install -r -requirements.txt
 
 - Run server
 ```shell
-uvicorn app.main:app
+BACKENDTASK1_POSTGRESQL_URL=<POSTGRESQL_URL> uvicorn app.main:app
 ```
 
 ## Configuration (Environment vars)
