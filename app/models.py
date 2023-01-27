@@ -2,7 +2,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Sequence, Iterable
 
-from sqlalchemy import Column, String, Integer, DateTime, Enum, ForeignKey, Table
+from sqlalchemy import Column, String, Integer, DateTime, Enum, ForeignKey, Table, TIMESTAMP
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import relationship
@@ -35,12 +35,20 @@ class Mailing(Base):
     clients_tags: list[MailingTag] = relationship("MailingTag",
                                                   secondary=mailings_and_mailing_tags_association,
                                                   lazy="subquery")
-    clients_mobile_operator_codes: list[MailingMobileOperatorCode] = \
+    _clients_mobile_operator_codes: list[MailingMobileOperatorCode] = \
         relationship("MailingMobileOperatorCode",
                      secondary=mailings_and_operator_codes_association,
                      lazy="subquery")
-    start_time = Column(DateTime, nullable=False)
-    end_time = Column(DateTime, nullable=False)
+    start_time = Column(type_=TIMESTAMP(timezone=True), nullable=False)
+    end_time = Column(type_=TIMESTAMP(timezone=True), nullable=False)
+
+    @property
+    def clients_mobile_operator_codes(self) -> list[int]:
+        return [value for i in self._clients_mobile_operator_codes if (value := i.code)]
+
+    @clients_mobile_operator_codes.setter
+    def clients_mobile_operator_codes(self, value: list[MailingMobileOperatorCode]) -> None:
+        self._clients_mobile_operator_codes = value
 
     @classmethod
     async def create(cls,
@@ -66,7 +74,7 @@ class Mailing(Base):
         codes = [*existed_codes, *new_codes]
         return cls(
             clients_tags=tags,
-            clients_mobile_operator_codes=codes,
+            _clients_mobile_operator_codes=codes,
             text=text,
             start_time=start_time,
             end_time=end_time)

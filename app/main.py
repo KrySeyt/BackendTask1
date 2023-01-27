@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 from fastapi import FastAPI, Request, status, Path, HTTPException, Depends
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -45,7 +43,6 @@ async def close_db_session() -> None:
     await db.close()
 
 
-@lru_cache(maxsize=1)
 async def get_endpoint() -> Endpoint:
     endpoint_url = get_settings().endpoint_url
     endpoint = APIEndpoint(endpoint_url) if endpoint_url else TestEndpoint()

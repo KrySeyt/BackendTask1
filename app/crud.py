@@ -1,5 +1,5 @@
 import datetime
-from typing import Sequence
+from typing import Sequence, reveal_type
 
 from sqlalchemy_utils import PhoneNumber
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -126,7 +126,7 @@ async def update_mailing(db: AsyncSession, mailing: schema.MailingInWithID) -> m
             db_tag = models.MailingTag(tag.text)
         clients_tags.append(db_tag)
 
-    clients_operator_codes = []
+    clients_operator_codes: list[models.MailingMobileOperatorCode] = []
     for code in mailing.clients_mobile_operator_codes:
         db_code = await get_operator_code(db, code)
         if not db_code:
@@ -137,7 +137,8 @@ async def update_mailing(db: AsyncSession, mailing: schema.MailingInWithID) -> m
     db_mailing.start_time = mailing.start_time
     db_mailing.end_time = mailing.end_time
     db_mailing.clients_tags = clients_tags
-    db_mailing.clients_mobile_operator_codes = clients_operator_codes
+    db_mailing.clients_mobile_operator_codes = clients_operator_codes  # type: ignore
+    # Mypy doesn't handle type that setter expects, only that getter returns
 
     await db.commit()
     await db.refresh(db_mailing)
