@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 6b3da51d6ebf
+Revision ID: ef4955af4374
 Revises: 
-Create Date: 2023-01-05 01:21:21.875588
+Create Date: 2023-01-28 17:07:16.867287
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlalchemy_utils
 
 
 # revision identifiers, used by Alembic.
-revision = '6b3da51d6ebf'
+revision = 'ef4955af4374'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -28,7 +28,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_mailing_mobile_operator_codes_id'), 'mailing_mobile_operator_codes', ['id'], unique=False)
     op.create_table('mailing_tags',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('text', sa.String(), nullable=True),
+    sa.Column('text', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('text')
     )
@@ -43,8 +43,8 @@ def upgrade() -> None:
     op.create_index(op.f('ix_mailings_id'), 'mailings', ['id'], unique=False)
     op.create_table('messages',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=True),
-    sa.Column('status', sa.Enum('delivered', 'not_delivered', name='messagestatus'), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('status', sa.Enum('delivered', 'not_delivered', name='messagestatus'), nullable=False),
     sa.Column('mailing_id', sa.Integer(), nullable=False),
     sa.Column('client_id', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
@@ -52,10 +52,10 @@ def upgrade() -> None:
     op.create_index(op.f('ix_messages_id'), 'messages', ['id'], unique=False)
     op.create_table('clients',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('phone_number', sqlalchemy_utils.types.phone_number.PhoneNumberType(length=20), nullable=True),
-    sa.Column('phone_operator_code', sa.Integer(), nullable=True),
-    sa.Column('tag_id', sa.Integer(), nullable=True),
-    sa.Column('timezone', sa.String(), nullable=True),
+    sa.Column('phone_number', sqlalchemy_utils.types.phone_number.PhoneNumberType(length=20), nullable=False),
+    sa.Column('phone_operator_code', sa.Integer(), nullable=False),
+    sa.Column('tag_id', sa.Integer(), nullable=False),
+    sa.Column('timezone', sa.String(), nullable=False),
     sa.ForeignKeyConstraint(['tag_id'], ['mailing_tags.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

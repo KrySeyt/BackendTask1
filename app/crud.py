@@ -10,7 +10,9 @@ from . import models
 
 
 async def get_tags_by_texts(db: AsyncSession, tags: Sequence[str]) -> list[models.MailingTag]:
-    return (await db.execute(select(models.MailingTag).where(models.MailingTag.text.in_(tags)))).scalars().all()
+    stmt = select(models.MailingTag).where(models.MailingTag.text.in_(tags))
+    db_tags = await db.execute(stmt)
+    return list(db_tags.scalars().all())
 
 
 async def create_mailing_tag(db: AsyncSession, tag: schema.MailingTagIn) -> models.MailingTag:
@@ -55,7 +57,7 @@ async def get_client_by_phone_number(db: AsyncSession, phone_number: int) -> mod
 
 
 async def get_clients(db: AsyncSession, skip: int = 0, limit: int = 100) -> list[models.Client]:
-    return (await db.execute(select(models.Client).offset(skip).limit(limit))).scalars().all()
+    return list((await db.execute(select(models.Client).offset(skip).limit(limit))).scalars().all())
 
 
 async def update_client(db: AsyncSession, client: schema.ClientInWithID) -> models.Client | None:
@@ -147,32 +149,33 @@ async def update_mailing(db: AsyncSession, mailing: schema.MailingInWithID) -> m
 
 
 async def get_all_mailings(db: AsyncSession) -> list[models.Mailing]:
-    return (await db.execute(select(models.Mailing))).scalars().all()
+    return list((await db.execute(select(models.Mailing))).scalars().all())
 
 
 async def get_mailing_messages(db: AsyncSession, mailing_id: int) -> list[models.Message]:
-    return (await db.execute(select(models.Message).filter(models.Message.mailing_id == mailing_id))).scalars().all()
+    return list((await db.execute(select(models.Message).filter(
+        models.Message.mailing_id == mailing_id))).scalars().all())
 
 
 async def get_clients_by_tag(db: AsyncSession, tag: schema.MailingTag) -> list[models.Client]:
-    return (await db.execute(select(models.Client).filter(models.Client.tag.id == tag.id))).scalars().all()
+    return list((await db.execute(select(models.Client).filter(models.Client.tag.id == tag.id))).scalars().all())
 
 
 async def get_clients_by_tags(db: AsyncSession, tags: list[schema.MailingTag]) -> list[models.Client]:
     tags_ids = map(lambda x: x.id, set(tags))
-    return (await db.execute(select(models.Client).where(models.Client.tag.id in tags_ids))).scalars().all()
+    return list((await db.execute(select(models.Client).where(models.Client.tag.id.in_(tags_ids)))).scalars().all())
 
 
 async def get_clients_by_phone_code(db: AsyncSession, phone_code: int) -> list[models.Client]:
-    return (await db.execute(select(models.Client).where(
+    return list((await db.execute(select(models.Client).where(
         models.Client.phone_operator_code == phone_code
-    ))).scalars().all()
+    ))).scalars().all())
 
 
 async def get_clients_by_phone_codes(db: AsyncSession, phone_codes: Sequence[int]) -> list[models.Client]:
-    return (await db.execute(select(models.Client).where(
-        models.Client.phone_operator_code in set(phone_codes)
-    ))).scalars().all()
+    return list((await db.execute(select(models.Client).where(
+        models.Client.phone_operator_code.in_set(phone_codes)
+    ))).scalars().all())
 
 
 async def create_message(db: AsyncSession, mailing: schema.Mailing, client: schema.Client) -> models.Message:

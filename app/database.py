@@ -1,6 +1,5 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.orm import DeclarativeBase
 
 from .config import get_settings
 
@@ -11,7 +10,8 @@ SQLALCHEMY_DATABASE_URL = f"postgresql+asyncpg{DATABASE_URL_DATA}"
 engine = create_async_engine(
     SQLALCHEMY_DATABASE_URL,
 )
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession, expire_on_commit=False)
+SessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
 
-Base = declarative_base()
 
+class Base(DeclarativeBase):
+    pass

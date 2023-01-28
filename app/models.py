@@ -2,10 +2,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Sequence, Iterable
 
-from sqlalchemy import Column, String, Integer, DateTime, Enum, ForeignKey, Table, TIMESTAMP
+from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy_utils import PhoneNumberType, PhoneNumber
 
 from .database import Base
@@ -30,17 +30,16 @@ mailings_and_operator_codes_association = Table(
 class Mailing(Base):
     __tablename__ = "mailings"
 
-    id = Column(Integer, primary_key=True, index=True)
-    text = Column(String(), nullable=False)
-    clients_tags: list[MailingTag] = relationship("MailingTag",
-                                                  secondary=mailings_and_mailing_tags_association,
-                                                  lazy="subquery")
-    _clients_mobile_operator_codes: list[MailingMobileOperatorCode] = \
-        relationship("MailingMobileOperatorCode",
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    text: Mapped[str]
+    clients_tags: Mapped[list[MailingTag]] = relationship(secondary=mailings_and_mailing_tags_association,
+                                                          lazy="subquery")
+    _clients_mobile_operator_codes: Mapped[list[MailingMobileOperatorCode]] = \
+        relationship(
                      secondary=mailings_and_operator_codes_association,
                      lazy="subquery")
-    start_time = Column(type_=TIMESTAMP(timezone=True), nullable=False)
-    end_time = Column(type_=TIMESTAMP(timezone=True), nullable=False)
+    start_time: Mapped[datetime]
+    end_time: Mapped[datetime]
 
     @property
     def clients_mobile_operator_codes(self) -> list[int]:
@@ -83,8 +82,8 @@ class Mailing(Base):
 class MailingTag(Base):
     __tablename__ = "mailing_tags"
 
-    id = Column(Integer, primary_key=True, index=True)
-    text = Column(String, unique=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    text: Mapped[str] = mapped_column(unique=True)
 
     def __init__(self, text: str, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
@@ -94,8 +93,8 @@ class MailingTag(Base):
 class MailingMobileOperatorCode(Base):
     __tablename__ = "mailing_mobile_operator_codes"
 
-    id = Column(Integer, primary_key=True, index=True)
-    code = Column(Integer, nullable=False, unique=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    code: Mapped[int] = mapped_column(unique=True)
 
     def __init__(self, code: int, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
@@ -105,12 +104,12 @@ class MailingMobileOperatorCode(Base):
 class Client(Base):
     __tablename__ = "clients"
 
-    id = Column(Integer, primary_key=True, index=True)
-    phone_number: PhoneNumber = Column(PhoneNumberType())
-    phone_operator_code = Column(Integer)
-    tag_id = Column(Integer, ForeignKey("mailing_tags.id"))
-    tag: MailingTag = relationship("MailingTag", lazy="subquery")
-    timezone = Column(String, default="Europe/Amsterdam")
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    phone_number: Mapped[PhoneNumber] = mapped_column(type_=PhoneNumberType())
+    phone_operator_code: Mapped[int]
+    tag_id: Mapped[int] = mapped_column(ForeignKey("mailing_tags.id"))
+    tag: Mapped[MailingTag] = relationship(lazy="subquery")
+    timezone: Mapped[str] = mapped_column(default="Europe/Amsterdam")
 
     @classmethod
     async def create(cls,
@@ -128,7 +127,6 @@ class Client(Base):
         return cls(
             phone_number=phone_number,
             phone_operator_code=phone_operator_code,
-            tag_id=tag.id,
             tag=tag,
             timezone=timezone
         )
@@ -137,11 +135,11 @@ class Client(Base):
 class Message(Base):
     __tablename__ = "messages"
 
-    id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(DateTime, default=datetime.now)
-    status = Column(Enum(MessageStatus), default=MessageStatus.not_delivered)
-    mailing_id = Column(Integer, nullable=False)
-    client_id = Column(Integer, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    status: Mapped[MessageStatus] = mapped_column(default=MessageStatus.not_delivered)
+    mailing_id: Mapped[int]
+    client_id: Mapped[int]
 
     @classmethod
     async def create(cls, *args: Any, **kwargs: Any) -> Message:
