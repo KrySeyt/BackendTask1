@@ -1,4 +1,4 @@
-from typing import Sequence, Coroutine
+from typing import Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
