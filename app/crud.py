@@ -1,5 +1,5 @@
 import datetime
-from typing import Sequence, reveal_type
+from typing import Sequence
 
 from sqlalchemy_utils import PhoneNumber
 from sqlalchemy.ext.asyncio import AsyncSession
