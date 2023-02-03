@@ -20,6 +20,7 @@ async def get_mailing_tag(db: AsyncSession, tag_text: str) -> schema.MailingTag 
 
 async def delete_mailing(db: AsyncSession, mailing: schema.Mailing) -> schema.Mailing:
     await Schedule.delete_mailing_from_schedule(mailing)
+    await db.rollback()
     sending = await Sending.get_sending(mailing)
     if sending:
         await sending.stop()

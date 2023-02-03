@@ -42,13 +42,6 @@ async def delete_client(db: AsyncSession, client_id: int) -> schema.Client | Non
     return schema.Client.from_orm(db_client)
 
 
-async def update_mailing(db: AsyncSession, mailing: schema.MailingInWithID) -> schema.Mailing | None:
-    updated_db_mailing = await crud.update_mailing(db, mailing)
-    if not updated_db_mailing:
-        return None
-    return schema.Mailing.from_orm(updated_db_mailing)
-
-
 async def get_clients_by_tag(db: AsyncSession, tag: schema.MailingTag) -> list[schema.Client]:
     return list(map(schema.Client.from_orm, await crud.get_clients_by_tag(db, tag)))
 

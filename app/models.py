@@ -5,11 +5,14 @@ from typing import Any, Sequence, Iterable
 from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.orm import relationship, Mapped, DeclarativeBase, mapped_column
 from sqlalchemy_utils import PhoneNumberType, PhoneNumber
 
-from .database import Base
 from .schema import MessageStatus
+
+
+class Base(DeclarativeBase):
+    pass
 
 
 mailings_and_mailing_tags_association = Table(

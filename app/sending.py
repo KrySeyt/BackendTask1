@@ -37,6 +37,7 @@ class Sending:
     async def stop(self) -> None:
         for task in self.request_tasks:
             task.cancel()
+        self.request_tasks.clear()
 
     async def start(self, db: AsyncSession, endpoint: Endpoint) -> None:
         clients_set = {
