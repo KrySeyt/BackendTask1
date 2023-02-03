@@ -1,25 +1,14 @@
 # BackendTask1
 Task - https://www.craft.do/s/n6OVYFVUpq0o6L
 
-## ✅ Checked by mypy by GitHub Actions:
-```shell
-mypy app --strict
-```
-
-## Migrations:
-```shell
-alembic revision --autogenerate
-alembic upgrade head
-```
-
 ## Additional tasks:
 
-⏱1. Tests
+✅ 1. Tests
 
-⏱2. CI (required GitLab, but I prefer portfolio here)
-- ✅ MyPy
+✅ 2. CI (required GitLab, but I prefer portfolio here)
+- ✅ MyPy (`--strict`)
 - ✅ Deepsource (https://deepsource.io/)
-- ⏱ Unit-tests
+- ✅ Unit-tests
 
 ✅ 5. Swagger (/docs/) and Redoc (/redoc/)
 
@@ -50,6 +39,13 @@ pip install -r -requirements.txt
 - Run server
 ```shell
 BACKENDTASK1_POSTGRESQL_URL=<POSTGRESQL_URL> uvicorn app.main:app
+```
+
+## Postgresql migrations:
+Create database schema from `app/models.py`:
+```shell
+alembic revision --autogenerate
+alembic upgrade head
 ```
 
 ## Configuration (Environment vars)
@@ -100,3 +96,31 @@ BACKENDTASK1_SUCCESSFUL_STATUS_CODES='["200", "418"]'
 `
 BACKENDTASK1_MAX_REQUESTS_AT_TIME='50'
 `
+
+## Testing
+  *All tests driving by <a href="https://github.com/pytest-dev/pytest">pytest</a>*
+
+  Run tests my command:
+
+  ```shell
+  pytest tests/
+  ```
+
+  Tests with coverage report:
+
+  ```shell
+  pytest tests/ --cov=app
+  ```
+
+  Coverage report from `.coverage`:
+
+  *`-m`: show missing lines*
+  ```shell
+  coverage report -m
+  ```
+
+### Some about testing process
+For testing production `postgresql+asyncpg` database replacing with `sqlite3+aiosqlite`.\
+On test session start, `pytest`'s fixture creates `test.sqlite3` file and delete on testing session end.
+In the future may be added, switch to `postgresql+asyncpg` (like in production), 
+that provides by <a href="https://github.com/eradman/ephemeralpg">pg_tmp</a> (*Linux only*)
