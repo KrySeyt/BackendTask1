@@ -9,7 +9,7 @@ from .schema import ClientIn, ClientOut, ClientInWithID, MailingOut, MailingIn, 
 from . import mailings, stats
 from . import clients
 from .config import get_settings
-from .database import SessionLocal
+from .database import get_sessionmaker
 from .schedule import Schedule
 from .endpoints import APIEndpoint, TestEndpoint, Endpoint
 
@@ -32,7 +32,8 @@ async def get_db() -> AsyncSession:
     if hasattr(get_db, "db"):
         db: AsyncSession = get_db.db
         return db
-    db = SessionLocal()
+    sessionmaker = await get_sessionmaker()
+    db = sessionmaker()
     setattr(get_db, "db", db)
     return db
 

@@ -1,0 +1,8 @@
+[coverage:run]
+branch = True
+concurrency =
+    greenlet
+    thread
+
+[coverage:report]
+show_missing = True
