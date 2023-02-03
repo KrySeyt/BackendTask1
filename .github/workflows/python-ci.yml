@@ -1,4 +1,4 @@
-name: PythonCI
+name: Mypy
 
 on: [push]
 
@@ -19,6 +19,3 @@ jobs:
     - name: mypy
       run: |
         mypy app --strict
-    - name: pytest
-      run: |
-        pytest tests/

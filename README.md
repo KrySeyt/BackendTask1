@@ -1,4 +1,4 @@
-# BackendTask1
+# BackendTask1 ![PythonCI](https://github.com/KrySeyt/backendtask1/actions/workflows/python-ci.yml/badge.svg)
 Task - https://www.craft.do/s/n6OVYFVUpq0o6L
 
 ## Additional tasks:
