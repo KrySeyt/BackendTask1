@@ -6,9 +6,10 @@ from asgi_lifespan import LifespanManager
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import main
+from app import events
 from app import dependencies
 from app.database import database
-from app.mailing_service import schema, mailings, schedule
+from app.mailing_service import schema, schedule
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -34,8 +35,8 @@ async def test_startup_shutdown(monkeypatch):
     async def mock_get_db():
         return mock_db
 
-    monkeypatch.setattr(main, "get_db", mock_get_db)
-    monkeypatch.setattr(main, "get_all_mailings", mock_get_mailings := AsyncMock(return_value=(1, 2, 3)))
+    monkeypatch.setattr(events, "get_db", mock_get_db)
+    monkeypatch.setattr(events, "get_all_mailings", mock_get_mailings := AsyncMock(return_value=(1, 2, 3)))
     monkeypatch.setattr(schedule.Schedule, "add_mailing_to_schedule", mock_mailing_to_schedule := AsyncMock())
 
     async with LifespanManager(main.app):
