@@ -23,7 +23,7 @@ class Schedule:
     @classmethod
     async def delete_expired_task(cls, mailing: Mailing) -> None:
         await asyncio.sleep(mailing.end_time.timestamp() - datetime.now().timestamp())
-        cls.tasks.pop(mailing).cancel()  # TODO: Stop sending tasks on mailing expiring
+        cls.tasks.pop(mailing).cancel()
         cls.expired_tasks_delition.pop(mailing)
 
     @classmethod
