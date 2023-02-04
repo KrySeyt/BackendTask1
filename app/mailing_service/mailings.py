@@ -8,7 +8,7 @@ from .sending import Sending
 from .endpoints import Endpoint
 
 from . import schema
-from . import crud
+from app.database import crud
 
 
 async def get_mailing_tag(db: AsyncSession, tag_text: str) -> schema.MailingTag | None:

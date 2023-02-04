@@ -1,0 +1,65 @@
+from fastapi import APIRouter, status, HTTPException, Path, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.mailing_service import clients
+from app.mailing_service.schema import ClientOut, ValidationErrorSchema, ClientIn, Client, ClientInWithID
+
+from ..dependencies import get_db_stub
+
+router = APIRouter()
+
+
+@router.post("/client/",
+             response_model=ClientOut,
+             tags=["client"],
+             responses={422: {"model": ValidationErrorSchema}}
+             )
+async def create_client(client_in: ClientIn, db: AsyncSession = Depends(get_db_stub)) -> Client:
+    client = await clients.create_client(db, client_in)
+    return client
+
+
+@router.put("/client/",
+            response_model=ClientOut | None,
+            tags=["client"],
+            responses={422: {"model": ValidationErrorSchema}, 404: {}}
+            )
+async def update_client(client: ClientInWithID, db: AsyncSession = Depends(get_db_stub)) -> Client | None:
+    db_client = await clients.get_client_by_id(db, client.id)
+    if not db_client:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return await clients.update_client(db, client)
+
+
+@router.get("/client/{client_id}",
+            response_model=ClientOut,
+            tags=["client"],
+            responses={422: {"model": ValidationErrorSchema}, 404: {}}
+            )
+async def get_client(client_id: int = Path(), db: AsyncSession = Depends(get_db_stub)) -> Client:
+    client = await clients.get_client_by_id(db, client_id)
+    if not client:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return client
+
+
+@router.delete("/client/{client_id}",
+               response_model=ClientOut,
+               tags=["client"],
+               responses={422: {"model": ValidationErrorSchema}, 404: {}}
+               )
+async def delete_client(client_id: int = Path(), db: AsyncSession = Depends(get_db_stub)) -> Client | None:
+    client = await clients.get_client_by_id(db, client_id)
+    if not client:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return await clients.delete_client(db, client_id)
+
+
+@router.get("/clients/",
+            response_model=list[ClientOut],
+            tags=["client"],
+            responses={422: {"model": ValidationErrorSchema}}
+            )
+async def get_clients(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db_stub)) -> list[Client]:
+    clients_list = await clients.get_clients(db, skip, limit)
+    return clients_list

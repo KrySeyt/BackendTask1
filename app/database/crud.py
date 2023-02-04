@@ -5,8 +5,8 @@ from sqlalchemy_utils import PhoneNumber
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from . import schema
-from . import models
+from app.mailing_service import schema
+from app.database import models
 
 
 async def get_tags_by_texts(db: AsyncSession, tags: Sequence[str]) -> list[models.MailingTag]:

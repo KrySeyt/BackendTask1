@@ -3,7 +3,8 @@ from sqlalchemy import select
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import crud, models, schema
+from app.mailing_service import schema
+from app.database import crud, models
 
 
 async def test_get_tags_by_texts(testing_database: AsyncSession):

@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app import database
+from app.database import database
 
 
 async def test_get_sessionmaker(monkeypatch):

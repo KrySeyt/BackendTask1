@@ -1,4 +1,4 @@
-from app import models
+from app.database import models
 
 
 async def test_client_create(testing_database):

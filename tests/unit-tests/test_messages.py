@@ -1,12 +1,13 @@
 from unittest.mock import AsyncMock, MagicMock
 
-from app import messages
+from app.mailing_service import messages, schema
+from app.database import crud
 
 
 async def test_create_message(monkeypatch):
     expected_result = "Result"
-    monkeypatch.setattr(messages.crud, "create_message", crud_mock := AsyncMock())
-    monkeypatch.setattr(messages.schema.Message, "from_orm", schema_mock := MagicMock(return_value=expected_result))
+    monkeypatch.setattr(crud, "create_message", crud_mock := AsyncMock())
+    monkeypatch.setattr(schema.Message, "from_orm", schema_mock := MagicMock(return_value=expected_result))
 
     result = await messages.create_message(AsyncMock(), MagicMock(), MagicMock())
 

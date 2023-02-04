@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app import endpoints
+from app.mailing_service import endpoints
 
 
 async def test_abstract_endpoint(monkeypatch):

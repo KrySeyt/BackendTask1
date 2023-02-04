@@ -1,7 +1,7 @@
 import datetime
 from unittest.mock import MagicMock, AsyncMock
 
-from app import schedule
+from app.mailing_service import schedule
 
 
 async def test_mailing_task(mailing, monkeypatch):

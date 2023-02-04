@@ -2,10 +2,10 @@ import asyncio
 import datetime
 import random
 
-import pytest
 import pytz
 
-from app import mailings, schema, endpoints, crud, sending
+from app.mailing_service import mailings, schema, endpoints, sending
+from app.database import crud
 
 
 class SemiworkingEndpoint(endpoints.Endpoint):

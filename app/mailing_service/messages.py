@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from . import schema, crud
+from app.mailing_service import schema
+from app.database import crud
 
 
 async def create_message(db: AsyncSession, mailing: schema.Mailing, client: schema.Client) -> schema.Message:

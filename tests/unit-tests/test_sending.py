@@ -1,10 +1,7 @@
-import asyncio
-import datetime
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
-
-from app import sending, schema, config
+from app import config
+from app.mailing_service import sending, clients, messages
 
 
 async def test_get_sending(mailing):
@@ -15,9 +12,9 @@ async def test_get_sending(mailing):
 async def test_start(mailing, monkeypatch):
     sending_ = sending.Sending(mailing)
 
-    monkeypatch.setattr(sending.clients, "get_clients_by_tags", get_client_by_tags_mock := AsyncMock(return_value=[1, 2, 3]))
-    monkeypatch.setattr(sending.clients, "get_clients_by_phone_codes", get_client_by_phone_mock := AsyncMock(return_value=[4, 5, 6]))
-    monkeypatch.setattr(sending.messages, "create_message", create_message_mock := AsyncMock())
+    monkeypatch.setattr(clients, "get_clients_by_tags", get_client_by_tags_mock := AsyncMock(return_value=[1, 2, 3]))
+    monkeypatch.setattr(clients, "get_clients_by_phone_codes", get_client_by_phone_mock := AsyncMock(return_value=[4, 5, 6]))
+    monkeypatch.setattr(messages, "create_message", create_message_mock := AsyncMock())
 
     await sending_.start(AsyncMock(), MagicMock())
 

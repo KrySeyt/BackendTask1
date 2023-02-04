@@ -6,9 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .endpoints import Endpoint
 
 from .schema import Mailing, Message, Client, MessageStatus
-from .config import get_settings
-from . import clients
-from . import messages
+from app.config import get_settings
+from . import messages, clients
 
 
 class Sending:

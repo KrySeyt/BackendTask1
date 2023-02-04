@@ -2,8 +2,7 @@ from collections import Counter
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from . import mailings
-from . import schema
+from app.mailing_service import mailings, schema
 
 
 async def get_stats(db: AsyncSession) -> list[schema.MailingStats]:

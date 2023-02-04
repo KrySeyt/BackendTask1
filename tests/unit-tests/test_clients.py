@@ -1,12 +1,13 @@
 from unittest.mock import AsyncMock, MagicMock
 
-from app import clients
+from app.mailing_service import clients
+from app.database import crud
 
 
 async def test_get_client_by_phone_number(monkeypatch):
     expected_result = None
     phone_number = 0
-    monkeypatch.setattr(clients.crud, "get_client_by_phone_number", crud_mock := AsyncMock(return_value=expected_result))
+    monkeypatch.setattr(crud, "get_client_by_phone_number", crud_mock := AsyncMock(return_value=expected_result))
 
     result = await clients.get_client_by_phone_number(db_mock := AsyncMock(), phone_number)
     assert result == expected_result
@@ -27,7 +28,7 @@ async def test_get_client_by_phone_number(monkeypatch):
 
 async def test_update_client_none(monkeypatch):
     expected_result = None
-    monkeypatch.setattr(clients.crud, "update_client", crud_mock := AsyncMock(return_value=expected_result))
+    monkeypatch.setattr(crud, "update_client", crud_mock := AsyncMock(return_value=expected_result))
 
     result = await clients.update_client(db_mock := AsyncMock(), client_mock := MagicMock())
     assert result == expected_result
@@ -37,7 +38,7 @@ async def test_update_client_none(monkeypatch):
 async def test_delete_client_none(monkeypatch):
     expected_result = None
     client_id = 0
-    monkeypatch.setattr(clients.crud, "delete_client", crud_mock := AsyncMock(return_value=expected_result))
+    monkeypatch.setattr(crud, "delete_client", crud_mock := AsyncMock(return_value=expected_result))
 
     result = await clients.delete_client(db_mock := AsyncMock(), client_id)
     assert result == expected_result
@@ -46,7 +47,7 @@ async def test_delete_client_none(monkeypatch):
 
 async def test_get_clients_by_tag(monkeypatch):
     expected_result = ["Result"]
-    monkeypatch.setattr(clients.crud, "get_clients_by_tag", crud_mock := AsyncMock(return_value=["client"]))
+    monkeypatch.setattr(crud, "get_clients_by_tag", crud_mock := AsyncMock(return_value=["client"]))
     monkeypatch.setattr(clients.schema.Client, "from_orm", from_orm_mock := MagicMock(return_value="Result"))
 
     result = await clients.get_clients_by_tag(db_mock := AsyncMock(), tag_mock := MagicMock())
@@ -62,7 +63,7 @@ async def test_get_clients_by_tags(monkeypatch):
 
     crud_mock = AsyncMock(return_value=["client1", "client2"])
     from_orm_mock = MagicMock(return_value="Result")
-    monkeypatch.setattr(clients.crud, "get_clients_by_tags", crud_mock)
+    monkeypatch.setattr(crud, "get_clients_by_tags", crud_mock)
     monkeypatch.setattr(clients.schema.Client, "from_orm", from_orm_mock)
 
     result = await clients.get_clients_by_tags(db_mock := AsyncMock(), tags_mock := [MagicMock()])
@@ -75,7 +76,7 @@ async def test_get_clients_by_tags(monkeypatch):
 
 async def test_get_clients_by_phone_code(monkeypatch):
     expected_result = ["Result"]
-    monkeypatch.setattr(clients.crud, "get_clients_by_phone_code", crud_mock := AsyncMock(return_value=["client"]))
+    monkeypatch.setattr(crud, "get_clients_by_phone_code", crud_mock := AsyncMock(return_value=["client"]))
     monkeypatch.setattr(clients.schema.Client, "from_orm", from_orm_mock := MagicMock(return_value="Result"))
 
     result = await clients.get_clients_by_phone_code(db_mock := AsyncMock(), tag_mock := MagicMock())
@@ -91,7 +92,7 @@ async def test_get_clients_by_phone_codes(monkeypatch):
 
     crud_mock = AsyncMock(return_value=["client", "client2"])
     from_orm_mock = MagicMock(return_value="Result")
-    monkeypatch.setattr(clients.crud, "get_clients_by_phone_codes", crud_mock)
+    monkeypatch.setattr(crud, "get_clients_by_phone_codes", crud_mock)
     monkeypatch.setattr(clients.schema.Client, "from_orm", from_orm_mock)
 
     result = await clients.get_clients_by_phone_codes(db_mock := AsyncMock(), tags_mock := [MagicMock()])

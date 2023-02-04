@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 import aiohttp
 
-from app.schema import Message, Client, Mailing
+from app.mailing_service.schema import Message, Client, Mailing
 
 
 StatusCode = int

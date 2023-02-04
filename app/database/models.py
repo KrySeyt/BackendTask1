@@ -8,7 +8,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import relationship, Mapped, DeclarativeBase, mapped_column
 from sqlalchemy_utils import PhoneNumberType, PhoneNumber
 
-from .schema import MessageStatus
+from app.mailing_service.schema import MessageStatus
 
 
 class Base(DeclarativeBase):

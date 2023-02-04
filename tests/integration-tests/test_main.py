@@ -5,7 +5,10 @@ import pytest
 from asgi_lifespan import LifespanManager
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import main, schema, database
+from app import main
+from app import dependencies
+from app.database import database
+from app.mailing_service import schema, mailings, schedule
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -13,14 +16,14 @@ async def change_main_database(testing_database):
     async def mock_get_db():
         return testing_database
 
-    main.app.dependency_overrides[main.get_db] = mock_get_db
+    main.app.dependency_overrides[dependencies.get_db_stub] = mock_get_db
 
 
 async def test_get_db(monkeypatch):
     settings_mock = MagicMock()
     settings_mock.postgresql_url = "postgresql://scott:tiger@hostname/dbname"
     monkeypatch.setattr(database, "get_settings", lambda *args, **kwargs: settings_mock)
-    assert await main.get_db() is await main.get_db()
+    assert await dependencies.get_db() is await dependencies.get_db()
 
 
 async def test_startup_shutdown(monkeypatch):
@@ -32,8 +35,8 @@ async def test_startup_shutdown(monkeypatch):
         return mock_db
 
     monkeypatch.setattr(main, "get_db", mock_get_db)
-    monkeypatch.setattr(main.mailings, "get_all_mailings", mock_get_mailings := AsyncMock(return_value=(1, 2, 3)))
-    monkeypatch.setattr(main.Schedule, "add_mailing_to_schedule", mock_mailing_to_schedule := AsyncMock())
+    monkeypatch.setattr(main, "get_all_mailings", mock_get_mailings := AsyncMock(return_value=(1, 2, 3)))
+    monkeypatch.setattr(schedule.Schedule, "add_mailing_to_schedule", mock_mailing_to_schedule := AsyncMock())
 
     async with LifespanManager(main.app):
         pass

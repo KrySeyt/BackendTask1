@@ -2,8 +2,8 @@ from typing import Sequence
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from . import schema
-from . import crud
+from app.mailing_service import schema
+from app.database import crud
 
 
 async def create_client(db: AsyncSession, client: schema.ClientIn) -> schema.Client:
