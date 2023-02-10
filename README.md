@@ -40,7 +40,7 @@ pip install -r -requirements.txt
 
 - Run server
 ```shell
-BACKENDTASK1_POSTGRESQL_URL=<POSTGRESQL_URL> uvicorn app.main:app
+BACKENDTASK1_POSTGRESQL_URL=<POSTGRESQL_URL> uvicorn src.main:src
 ```
 
 ## Postgresql migrations:
@@ -111,7 +111,7 @@ BACKENDTASK1_MAX_REQUESTS_AT_TIME='50'
   Tests with coverage report:
 
   ```shell
-  pytest tests/ --cov=app
+  pytest tests/ --cov=src
   ```
 
   Coverage report from `.coverage`:

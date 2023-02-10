@@ -8,14 +8,15 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from alembic import context
 
-from app import database
-from app.database import models
+from src import database
+from src.mailings import models as mailings_models
+from src.clients import models as clients_models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 if not config.get_main_option("sqlalchemy.url"):
-    config.set_main_option("sqlalchemy.url", database.SQLALCHEMY_DATABASE_URL)
+    config.set_main_option("sqlalchemy.url", database.get_sqlalchemy_postgres_url())
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -27,7 +28,7 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 
-target_metadata = models.Base.metadata
+target_metadata = database.Base.metadata
 
 
 # other values from the config, defined by the needs of env.py,
