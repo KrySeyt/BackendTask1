@@ -4,8 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.clients import service
 from .schema import ClientOut, ClientIn, Client, ClientInWithID
 from src.exceptions import ValidationErrorSchema
-from src.dependencies import get_db_stub
-from src.logging import log_parsed_request
+from src.dependencies import get_db_stub, log_parsed_request
 
 
 router = APIRouter(dependencies=[Depends(log_parsed_request)])

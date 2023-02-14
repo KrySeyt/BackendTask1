@@ -6,8 +6,7 @@ from src.mailings.endpoints import Endpoint
 from src.mailings.schema import MailingOut, MailingIn, Mailing, MailingInWithID, \
     DetailMailingStats, DetailMailingStatsOut, MailingStats, MailingStatsOut
 from src.exceptions import ValidationErrorSchema
-from src.dependencies import get_db_stub
-from src.logging import log_parsed_request
+from src.dependencies import get_db_stub, log_parsed_request
 
 from .dependencies import get_endpoint_stub
 

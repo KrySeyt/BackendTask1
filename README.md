@@ -40,7 +40,7 @@ pip install -r -requirements.txt
 
 - Run server
 ```shell
-BACKENDTASK1_POSTGRESQL_URL=<POSTGRESQL_URL> uvicorn src.main:src
+BACKENDTASK1_POSTGRESQL_URL=<POSTGRESQL_URL> uvicorn src.main:app
 ```
 
 ## Postgresql migrations:

@@ -2,7 +2,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Sequence, Iterable
 
-from sqlalchemy import Column, ForeignKey, Table
+from sqlalchemy import Column, ForeignKey, Table, TIMESTAMP
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import relationship, Mapped, mapped_column
@@ -37,8 +37,8 @@ class Mailing(Base):
         relationship(
                      secondary=mailings_and_operator_codes_association,
                      lazy="subquery")
-    start_time: Mapped[datetime]
-    end_time: Mapped[datetime]
+    start_time: Mapped[datetime] = Column(type_=TIMESTAMP(timezone=True), nullable=False)  # type: ignore[assignment]
+    end_time: Mapped[datetime] = Column(type_=TIMESTAMP(timezone=True), nullable=False)  # type: ignore[assignment]
 
     @property
     def clients_mobile_operator_codes(self) -> list[int]:
@@ -104,7 +104,8 @@ class Message(Base):
     __tablename__ = "messages"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    created_at: datetime = Column(type_=TIMESTAMP(timezone=True),
+                                  default=datetime.now, nullable=False)  # type: ignore[assignment]
     status: Mapped[MessageStatus] = mapped_column(default=MessageStatus.not_delivered)
     mailing_id: Mapped[int]
     client_id: Mapped[int]

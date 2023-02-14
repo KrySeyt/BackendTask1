@@ -35,7 +35,7 @@ class Schedule:
     async def delete_mailing_from_schedule(cls, mailing: Mailing) -> None:
         for tasks_dict in (cls.tasks, cls.expired_tasks_delition):
             task = tasks_dict.pop(mailing, None)
-            if not task:
+            if not task or task.done():
                 continue
             task.cancel()
             async with asyncio.timeout(10):

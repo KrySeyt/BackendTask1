@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: ef4955af4374
+Revision ID: 444f2fa8d300
 Revises: 
-Create Date: 2023-01-28 17:07:16.867287
+Create Date: 2023-02-14 03:07:59.120480
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlalchemy_utils
 
 
 # revision identifiers, used by Alembic.
-revision = 'ef4955af4374'
+revision = '444f2fa8d300'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -36,14 +36,14 @@ def upgrade() -> None:
     op.create_table('mailings',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('text', sa.String(), nullable=False),
-    sa.Column('start_time', sa.DateTime(), nullable=False),
-    sa.Column('end_time', sa.DateTime(), nullable=False),
+    sa.Column('start_time', sa.TIMESTAMP(timezone=True), nullable=False),
+    sa.Column('end_time', sa.TIMESTAMP(timezone=True), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_mailings_id'), 'mailings', ['id'], unique=False)
     op.create_table('messages',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.TIMESTAMP(timezone=True), nullable=False),
     sa.Column('status', sa.Enum('delivered', 'not_delivered', name='messagestatus'), nullable=False),
     sa.Column('mailing_id', sa.Integer(), nullable=False),
     sa.Column('client_id', sa.Integer(), nullable=False),
