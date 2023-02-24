@@ -8,9 +8,9 @@ Task - https://www.craft.do/s/n6OVYFVUpq0o6L
 ✅ 1. Tests
 
 ✅ 2. CI (required GitLab, but I prefer portfolio here)
-- ✅ MyPy (`--strict`)
+- ✅ Mypy (`--strict`)
 - ✅ Deepsource (https://deepsource.io/)
-- ✅ Unit and integration tests
+- ✅ Tests
 
 ✅ 5. Swagger (/docs/) and Redoc (/redoc/)
 
