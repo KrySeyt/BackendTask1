@@ -1,4 +1,5 @@
 import sys
+import logging
 
 from loguru import logger
 
@@ -59,8 +60,18 @@ def add_api_response_log_handling() -> None:
 #     )
 
 
-def configure_logging() -> None:
+def stop_uvicorn_logging() -> None:
+    logging.getLogger("uvicorn.access").handlers = []
+
+
+def remove_default_loguru_handler() -> None:
     logger.remove(0)
+
+
+def configure_logging() -> None:
+    stop_uvicorn_logging()
+    remove_default_loguru_handler()
+
     add_api_received_request_log_handling()
     add_api_parsed_request_log_handling()
     add_api_response_log_handling()
