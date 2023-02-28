@@ -8,13 +8,9 @@ jobs:
     name: Mypy
     steps:
     - uses: actions/checkout@v1
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.11
-    - name: Install Dependencies
-      run: |
-        pip install -r requirements.txt
-    - name: mypy
-      run: |
-        mypy src --strict
+    
+    - name: Build Docker image
+      run: docker build . -t img
+
+    - name: Run mypy
+      run: docker run img mypy src/ --strict

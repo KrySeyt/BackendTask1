@@ -1,17 +1,13 @@
-version: "3"
-
+version: "3.8"
 
 services:
-  fastapi_app:
-    build:
-      context: .
+  mailing_service:
+    build: .
     ports:
-      - 80:8888
-    volumes:
-      - ./:/mailing_service/
+      - 8000:8000
     environment:
       - BACKENDTASK1_POSTGRESQL_URL
       - BACKENDTASK1_ENDPOINT_URL
       - BACKENDTASK1_SUCCESSFUL_STATUS_CODES
-      - BACKENDTASK1_MAX_REQUESTS_AT_TIME
+      - BACKENDTASK1_MAX_REQUEST_AT_TIME
       - BACKENDTASK1_LOGGING__FORMAT

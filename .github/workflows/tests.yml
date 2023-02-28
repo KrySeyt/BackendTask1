@@ -8,16 +8,18 @@ jobs:
       PYTHON: '3.11'
     steps:
     - uses: actions/checkout@master
-    - name: Setup Python
-      uses: actions/setup-python@master
-      with:
-        python-version: 3.11
-    - name: Generate coverage report
-      run: |
-        pip install -r requirements.txt
-        pytest tests/ --cov=src --cov-report=xml
+
+    - name: Build Docker image
+      run: docker compose -f docker-compose.yml -f tests.yml build
+
+    - name: Run tests
+      run: docker compose -f docker-compose.yml -f tests.yml up --abort-on-container-exit
+      
+    - name: Copy coverage data from container
+      run: docker compose cp mailing_service:/mailing_service/coverage.xml ./
+
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v2
       with:
         directory: ./
         env_vars: OS,PYTHON
