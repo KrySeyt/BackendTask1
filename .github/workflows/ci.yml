@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    tags:
+      - "*"
+    branches:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    outputs:
+      build_version: ${{ steps.build_version_output.outputs.BUILD_VERSION }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get commit sha head
+        run: echo "COMMIT_SHA_HEAD=`echo ${GITHUB_SHA} | cut -c -7`" >> $GITHUB_ENV
+
+      - name: Set BUILD_VERSION
+        run: echo "BUILD_VERSION=${GITHUB_REF#refs/*/}-${{ env.COMMIT_SHA_HEAD }}" >> $GITHUB_ENV
+
+      - name: BUILD_VERSION to job output
+        id: build_version_output
+        run: echo "build_version=$BUILD_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Login to ghcr
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+
+      - name: Build image
+        run: docker build . --tag ghcr.io/kryseyt/mailing_service:${BUILD_VERSION}
+
+      - name: Push image
+        run: docker push ghcr.io/kryseyt/mailing_service:${{ env.BUILD_VERSION }}
+
+  mypy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Run mypy
+      run: IMAGE_VERSION=${{ needs.build.outputs.build_version }} docker compose -f docker-compose.yml -f mypy.yml up
+
+  tests:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      OS: ubuntu-latest
+      PYTHON: '3.11'
+
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Run tests
+      run: IMAGE_VERSION=${{ needs.build.outputs.build_version }} docker compose -f docker-compose.yml -f tests.yml up --abort-on-container-exit
+      
+    - name: Copy coverage data from containerI
+      run: IMAGE_VERSION=${{ needs.build.outputs.build_version }} docker compose cp mailing_service:/mailing_service/coverage.xml ./
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        env_vars: OS,PYTHON
+        fail_ci_if_error: true
+        files: ./coverage.xml
+        flags: unit-tests
+        name: codecov-umbrella
+        verbose: true

@@ -1,4 +1,4 @@
 services:
   mailing_service:
-    restart: always
     image: ghcr.io/kryseyt/mailing_service:${IMAGE_VERSION}
+    entrypoint: mypy src/ --strict

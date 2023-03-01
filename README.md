@@ -1,4 +1,4 @@
-# BackendTask1 ![Mypy](https://github.com/KrySeyt/backendtask1/actions/workflows/mypy.yml/badge.svg)[![codecov](https://codecov.io/gh/KrySeyt/BackendTask1/branch/main/graph/badge.svg?token=V1H2036M7I)](https://codecov.io/gh/KrySeyt/BackendTask1)
+# BackendTask1 ![CI](https://github.com/KrySeyt/backendtask1/actions/workflows/ci.yml/badge.svg)[![codecov](https://codecov.io/gh/KrySeyt/BackendTask1/branch/main/graph/badge.svg?token=V1H2036M7I)](https://codecov.io/gh/KrySeyt/BackendTask1)
 *python 3.11.1*
 
 Task - https://www.craft.do/s/n6OVYFVUpq0o6L

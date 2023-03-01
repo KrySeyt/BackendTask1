@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   mailing_service:
-    build: .
+    image: ghcr.io/kryseyt/mailing_service:${IMAGE_VERSION}
     environment:
       - BACKENDTASK1_POSTGRESQL_URL=postgresql://postgres:postgres@postgres:5432/postgres
     depends_on:

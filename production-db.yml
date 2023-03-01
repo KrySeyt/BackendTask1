@@ -1,7 +1,7 @@
 services:
   mailing_service:
     restart: always
-    build: .
+    image: ghcr.io/kryseyt/mailing_service:${IMAGE_VERSION}
     environment:
       - BACKENDTASK1_POSTGRESQL_URL=postgresql://postgres:postgres@postgres:5432/postgres
     depends_on:
@@ -14,7 +14,7 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - db:/var/lib/postgresql
+      - db:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
