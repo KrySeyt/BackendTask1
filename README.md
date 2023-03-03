@@ -7,14 +7,23 @@ Task - https://www.craft.do/s/n6OVYFVUpq0o6L
 
 ✅ 1. Tests
 
-✅ 2. CI (required GitLab, but I prefer portfolio here)
+✅ 2. Auto building and tests (*required GitLab CI, used Github Actions because I prefer portfolio here*)
+
+*Tests and mypy performed on prebuilded image NOT rebuilding for every step*
+- ✅ Building Docker image
 - ✅ Mypy (`--strict`)
 - ✅ Deepsource (https://deepsource.io/)
 - ✅ Tests
 
+✅ 3. Docker compose (*see below*)
+
 ✅ 5. Swagger (/docs/) and Redoc (/redoc/)
 
 ✅ 9. Handling incorrect external endpoint work
+
+🕒 12. Logging
+- ✅ API response & requests
+- 🕒 etc
 
 ## Setup:
 
@@ -23,37 +32,57 @@ Task - https://www.craft.do/s/n6OVYFVUpq0o6L
 git clone https://github.com/KrySeyt/BackendTask1.git
 ```
 
-- Create venv
+- Run
+
+#### Production with your db:
+
+*required env vars:*
+- *BACKENDTASK1_POSTGRESQL_URL*
+- *IMAGE_VERSION*
+
 ```shell
-python -m venv BackendTask1
+BACKENDTASK1_POSTGRESQL_URL=<YOUR_POSTGRES_URL> IMAGE_VERSION="1.0.0-929fb7f" docker compose -f docker.compose.yml -f production-nodb.yml up
 ```
 
-- Activate venv
+#### Production with docker running db (bad idea):
+
+*required env vars:*
+- *IMAGE_VERSION*
+
 ```shell
-BackendTask1/Scripts/activate
+IMAGE_VERSION="1.0.0-929fb7f" docker compose -f docker.compose.yml -f production-db.yml up
 ```
 
-- Install dependencies
+#### Dev with mounted local dir:
 ```shell
-pip install -r -requirements.txt
+docker compose up
 ```
 
-- Run server
+#### Dev `bash` with mounted local dir:
 ```shell
-BACKENDTASK1_POSTGRESQL_URL=<POSTGRESQL_URL> uvicorn src.main:app
-```
-
-## Postgresql migrations:
-Create database schema from `app/models.py`:
-```shell
-alembic revision --autogenerate
-alembic upgrade head
+docker compose run mailing_service /bin/bash
 ```
 
 ## Configuration (Environment vars)
-###  *Variables names case doesn't matter*
 
-- ### BACKENDTASK1_POSTGRESQL_URL (*required*)
+- ### IMAGE_VERSION
+    Version of mailing_service, built by CI after commit or tag creation. Check repo packages for versions list
+    
+    #### There are two types of versions:
+    - `main-12e214a` - `<branch>-<commit_sha>` - **FOR DEV** - dev image version for demo, 
+    looking at new feature in work, etc. This builds on every commit in any branch. 
+    Dev image passes all tests, mypy, etc like a prod version.
+    **This is NOT for production**
+
+    - `1.0.0-929fb7f` - `<tag>-<commit_sha>` - **FOR PROD** - prod image version. 
+    Images with this versions pattern creates on every tag creation.
+    After creation, this image passing all tests, mypy, etc.
+    Versioning is verbose, u can find last tag version in repo releases
+  
+  ### **In short**:
+  -  **BRANCHES - FOR DEV**
+  -  **TAGS - FOR PROD**
+- ### BACKENDTASK1_POSTGRESQL_URL
     Url to your postgresql database without driver
 
 &ensp;&thinsp;&ensp;&thinsp;
@@ -99,30 +128,75 @@ BACKENDTASK1_SUCCESSFUL_STATUS_CODES='["200", "418"]'
 BACKENDTASK1_MAX_REQUESTS_AT_TIME='50'
 `
 
-## Testing
+- ### BACKENDTASK1_LOGGING__FORMAT
+  Logging message pattern. This pattern supplements to final messages
+
+  #### Default = "<green>{time:YYYY-MM-DDTHH:mm:ss.SSSZ!UTC}</green> | <level>{level:<8}</level>"
+
+&ensp;&thinsp;&ensp;&thinsp;
+`
+BACKENDTASK1_LOGGING__FORMAT="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
+`
+## Postgres migrations:
+### *All migrations automatically runs on service up*
+
+### Run migrations manually:
+```shell
+alembic upgrade head
+```
+
+If u updated `app/models.py` you can generate new migrations before run them:
+```shell
+alembic revision --autogenerate
+```
+
+## Tests
   *All tests driving by <a href="https://github.com/pytest-dev/pytest">pytest</a>*
+### Run tests manually
+#### With built image: 
+```shell
+IMAGE_VERSION=main-12e214a docker compose -f docker-compose.yml -f tests.yml --abort-on-container-exit
+```
 
-  Run tests my command:
+```shell
+IMAGE_VERSION=main-12e214a docker compose -f docker-compose.yml -f mypy.yml up
+```
 
-  ```shell
-  pytest tests/
-  ```
+#### With local files:
 
-  Tests with coverage report:
+Start dev container:
+```shell
+docker compose up
+```
 
-  ```shell
-  pytest tests/ --cov=src
-  ```
+Run tests:
+```shell
+pytest tests/
+```
 
-  Coverage report from `.coverage`:
+Tests with coverage report:
+```shell
+pytest tests/ --cov=src
+```
 
-  *`-m`: show missing lines*
-  ```shell
-  coverage report -m
-  ```
+Coverage report from `.coverage`:
+*`-m`: show missing lines*
+```shell
+coverage report -m
+```
 
-### Some about testing process
-For testing production `postgresql+asyncpg` database replacing with `sqlite3+aiosqlite`.\
-On test session start, `pytest`'s fixture creates `test.sqlite3` file and delete on testing session end.
-In the future may be added, switch to `postgresql+asyncpg` (like in production), 
-that provides by <a href="https://github.com/eradman/ephemeralpg">pg_tmp</a> (*Linux only*)
+Run mypy:
+```shell
+mypy src/ --strict
+```
+
+## CI
+  On every commit to branch creates new **DEV** image with version like `<branch>-<commit_sha>` 
+  This image passes all tests, mypy analysis with `--strict` and etc like prod image
+  
+  On every tag creation creates new **PROD** image with version like `<tag>-<commit_sha>`
+  This image passes all tests, mypy analysis with `--strict` and etc
+  
+  - commit_sha - first 7 sha symbols of image commit
+  - branch - branch name
+  - tag - created tag name. Tags names is verbose versions
