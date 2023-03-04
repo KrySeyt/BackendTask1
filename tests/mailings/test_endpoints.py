@@ -17,7 +17,7 @@ async def test_abstract_endpoint(monkeypatch):
 
 
 async def test_apiendpoint(monkeypatch):
-    url = "url"
+    url = "url/send"
     endpoint = endpoints.APIEndpoint(url)
 
     response_mock = MagicMock()

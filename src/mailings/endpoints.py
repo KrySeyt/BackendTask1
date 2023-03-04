@@ -26,7 +26,7 @@ class APIEndpoint(Endpoint):
                    client: clients_schema.Client,
                    mailing: mailings_schema.Mailing) -> StatusCode:
         async with aiohttp.ClientSession() as session:
-            async with session.post(f"{self.url}/send/{message.id}", json={
+            async with session.post(f"{self.url}/{message.id}", json={
                 "id": message.id,
                 "phone": int(client.phone_number),
                 "text": mailing.text,
