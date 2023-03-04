@@ -1,5 +1,5 @@
 from __future__ import annotations
-from datetime import datetime
+from datetime import datetime, timezone
 
 from enum import Enum
 from pydantic import BaseModel, Field
@@ -12,8 +12,8 @@ class HashableBaseModel(BaseModel):
 
 class MailingBase(HashableBaseModel):
     text: str = Field(example="Mailing text")
-    start_time: datetime
-    end_time: datetime
+    start_time: datetime = Field(default=datetime.now(timezone.utc))
+    end_time: datetime = Field(default=datetime.now(timezone.utc))
 
 
 class Mailing(MailingBase):
@@ -66,7 +66,7 @@ class MessageStatus(Enum):
 
 class Message(BaseModel):
     id: int
-    created_at: datetime
+    created_at: datetime = Field(default=datetime.now(timezone.utc))
     status: MessageStatus
     mailing_id: int
     client_id: int
