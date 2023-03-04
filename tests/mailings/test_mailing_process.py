@@ -60,7 +60,7 @@ async def test_mailing_process(testing_database):
 
     await endpoint.event.wait()
     sending_ = await sending.Sending.get_sending(mailing)
-    await asyncio.sleep(0.3)
+    await asyncio.sleep(1)
 
     await mailings_service.delete_mailing(testing_database, mailing)
     sended_count = endpoint.sended_messages_count

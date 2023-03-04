@@ -233,8 +233,8 @@ async def test_delete_client_422(client):
 async def test_create_mailing_200(client):
     data = {
         "text": "Mailing text",
-        "start_time": "2023-01-27T01:37:40.164000",
-        "end_time": "2023-01-27T01:37:40.164000",
+        "start_time": "2023-01-27T01:37:40.164000+00:00",
+        "end_time": "2023-01-27T01:37:40.164000+00:00",
         "clients_tags": [
             {
                 "text": "Any text"
@@ -257,8 +257,8 @@ async def test_create_mailing_200(client):
 async def test_create_mailing_422(client):
     data = {
         "text": "Mailing text",
-        "start_time": "2023-01-27T01:37:40.164000",
-        "end_time": "2023-01-27T01:37:40.164000",
+        "start_time": "2023-01-27T01:37:40.164000+00:00",
+        "end_time": "2023-01-27T01:37:40.164000+00:00",
         "clients_tags": [
             {
                 "text": "Any text"
@@ -283,8 +283,8 @@ async def test_create_mailing_422(client):
         ],
         "body": {
             "text": "Mailing text",
-            "start_time": "2023-01-27T01:37:40.164000",
-            "end_time": "2023-01-27T01:37:40.164000",
+            "start_time": "2023-01-27T01:37:40.164000+00:00",
+            "end_time": "2023-01-27T01:37:40.164000+00:00",
             "clients_tags": [
                 {
                     "text": "Any text"
@@ -310,8 +310,8 @@ async def test_update_mailing_200(client):
     data = {
         "id": 1,
         "text": "Another text",
-        "start_time": "2023-01-27T01:37:40.164000",
-        "end_time": "2023-01-27T01:37:40.164000",
+        "start_time": "2023-01-27T01:37:40.164000+00:00",
+        "end_time": "2023-01-27T01:37:40.164000+00:00",
         "clients_tags": [
             {
                 "text": "Any text"
@@ -335,8 +335,8 @@ async def test_update_mailing_422(client):
     data = {
         "id": "Just string",
         "text": "Another text",
-        "start_time": "2023-01-27T01:37:40.164000",
-        "end_time": "2023-01-27T01:37:40.164000",
+        "start_time": "2023-01-27T01:37:40.164000+00:00",
+        "end_time": "2023-01-27T01:37:40.164000+00:00",
         "clients_tags": [
             {
                 "text": "Any text"
@@ -357,8 +357,8 @@ async def test_update_mailing_404(client):
     data = {
         "id": "999999",
         "text": "Another text",
-        "start_time": "2023-01-27T01:37:40.164000",
-        "end_time": "2023-01-27T01:37:40.164000",
+        "start_time": "2023-01-27T01:37:40.164000+00:00",
+        "end_time": "2023-01-27T01:37:40.164000+00:00",
         "clients_tags": [
             {
                 "text": "Any text"
@@ -379,8 +379,8 @@ async def test_get_mailing_200(client):
     expected_result = {
         "id": 1,
         "text": "Another text",
-        "start_time": "2023-01-27T01:37:40.164000",
-        "end_time": "2023-01-27T01:37:40.164000",
+        "start_time": "2023-01-27T01:37:40.164000+00:00",
+        "end_time": "2023-01-27T01:37:40.164000+00:00",
         "clients_tags": [
             {
                 "text": "Any text"
@@ -417,8 +417,8 @@ async def test_get_stats_200_not_empty(client):
             },
             "mailing": {
                 "text": "Another text",
-                "start_time": "2023-01-27T01:37:40.164000",
-                "end_time": "2023-01-27T01:37:40.164000",
+                "start_time": "2023-01-27T01:37:40.164000+00:00",
+                "end_time": "2023-01-27T01:37:40.164000+00:00",
                 "id": 1,
                 "clients_tags": [
                     {
@@ -445,8 +445,8 @@ async def test_get_mailing_stats_200(client):
         "messages": [],
         "mailing": {
             "text": "Another text",
-            "start_time": "2023-01-27T01:37:40.164000",
-            "end_time": "2023-01-27T01:37:40.164000",
+            "start_time": "2023-01-27T01:37:40.164000+00:00",
+            "end_time": "2023-01-27T01:37:40.164000+00:00",
             "id": 1,
             "clients_tags": [
                 {
@@ -480,8 +480,8 @@ async def test_delete_mailing_200(client):
     expected_result = {
         "id": 1,
         "text": "Another text",
-        "start_time": "2023-01-27T01:37:40.164000",
-        "end_time": "2023-01-27T01:37:40.164000",
+        "start_time": "2023-01-27T01:37:40.164000+00:00",
+        "end_time": "2023-01-27T01:37:40.164000+00:00",
         "clients_tags": [
             {
                 "text": "Any text"

@@ -1,4 +1,4 @@
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncEngine
 from sqlalchemy.orm import DeclarativeBase
 
 from src.config import get_settings
@@ -19,8 +19,11 @@ def get_sqlalchemy_postgres_url() -> str:
     return sqlalchemy_database_url
 
 
-async def get_sessionmaker() -> async_sessionmaker[AsyncSession]:
-    engine = create_async_engine(
-        get_sqlalchemy_postgres_url(),
-    )
+async def get_async_engine() -> AsyncEngine:
+    return create_async_engine(get_sqlalchemy_postgres_url())
+
+
+async def get_sessionmaker(engine: AsyncEngine | None = None) -> async_sessionmaker[AsyncSession]:
+    if not engine:
+        engine = await get_async_engine()
     return async_sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)

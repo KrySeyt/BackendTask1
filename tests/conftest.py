@@ -1,16 +1,15 @@
 import asyncio
-import os
 from datetime import datetime
 
 import pytest
 from httpx import AsyncClient
 from alembic.config import Config
 from alembic.command import upgrade
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
 
 from src import main
 from src.mailings import schema
-from src.database import Base
+from src.database import Base, get_async_engine, get_sessionmaker
 
 
 @pytest.fixture
@@ -40,37 +39,23 @@ async def client() -> AsyncClient:
         yield c
 
 
-@pytest.fixture(scope="session")
-async def testing_database_url() -> str:
-    db_file_name = "test.sqlite3"
-    with open(db_file_name, "w"):
-        pass
-
-    yield f"sqlite+aiosqlite:///{db_file_name}"
-    os.remove(db_file_name)
-    # temp_db_url = check_output(["pg_tmp", "-t"]).decode("utf-8")  # Postgres by pg_tmp
-    # temp_db_url = temp_db_url[temp_db_url.find(':'):]
-    # temp_db_url = f"postgresql+asyncpg{temp_db_url}"
-    # return temp_db_url
-
-
 @pytest.fixture(scope="session", autouse=True)
-def create_test_database_schema(testing_database_url: str) -> None:
+def create_test_database_schema() -> None:
     cfg = Config("./alembic.ini")
-    cfg.set_main_option("sqlalchemy.url", testing_database_url)
     upgrade(cfg, "head")
 
 
 @pytest.fixture(scope="session")
-async def testing_db_engine(testing_database_url: str) -> AsyncEngine:
-    engine = create_async_engine(testing_database_url)
+async def testing_db_engine() -> AsyncEngine:
+    engine = await get_async_engine()
     yield engine
     await engine.dispose()
 
 
 @pytest.fixture(scope="session")
 async def testing_db_session(testing_db_engine: AsyncEngine) -> AsyncSession:
-    session = async_sessionmaker(bind=testing_db_engine, autoflush=False, expire_on_commit=False)()
+    sessionmaker = await get_sessionmaker(testing_db_engine)
+    session = sessionmaker()
     yield session
     await session.close()
 
@@ -93,8 +78,8 @@ async def testing_database(testing_db_session: AsyncSession,
 
 
 @pytest.fixture
-async def clear_testing_database(testing_db_engine: AsyncEngine,
-                                 testing_db_session: AsyncSession) -> AsyncSession:
+async def clear_testing_database(testing_db_session: AsyncSession,
+                                 testing_db_engine: AsyncEngine) -> AsyncSession:
     await testing_db_session.close()  # "When the Session is closed, it is essentially in the original state as when it
     # was first constructed, and may be used again. In this sense, the Session.close() method is more like a “reset”
     # back to the clean state and not as much as a “database close” method." - SQLAlchemy 2.0 docs
