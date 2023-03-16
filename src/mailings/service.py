@@ -94,3 +94,12 @@ async def get_mailing_stats(db: AsyncSession, mailing: schema.Mailing) -> schema
 
 async def create_message(db: AsyncSession, mailing: schema.Mailing, client: Client) -> schema.Message:
     return schema.Message.from_orm(await crud.create_message(db, mailing, client))
+
+
+async def change_message_status(db: AsyncSession,
+                                message: schema.Message,
+                                status: schema.MessageStatus) -> schema.Message:
+
+    await crud.change_message_status(db, message.id, status)
+    message.status = status
+    return message

@@ -40,8 +40,7 @@ class Sending:
             # ).info("Message sent")
 
             sleep_time += 20
-        message.status = MessageStatus.delivered
-        await db.commit()
+        await mailings_service.change_message_status(db, message, MessageStatus.delivered)
 
     async def stop(self) -> None:
         for task in self.request_tasks:

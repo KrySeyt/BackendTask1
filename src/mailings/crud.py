@@ -114,3 +114,21 @@ async def create_message(db: AsyncSession, mailing: schema.Mailing, client: clie
     await db.commit()
     await db.refresh(message)
     return message
+
+
+async def get_message_by_id(db: AsyncSession, message_id: int) -> models.Message | None:
+    return await db.get(models.Message, message_id)
+
+
+async def change_message_status(db: AsyncSession,
+                                message_id: int, status:
+                                schema.MessageStatus) -> models.Message | None:
+
+    db_message = await get_message_by_id(db, message_id)
+    if not db_message:
+        return None
+
+    db_message.status = status
+    await db.commit()
+    await db.refresh(db_message)
+    return db_message

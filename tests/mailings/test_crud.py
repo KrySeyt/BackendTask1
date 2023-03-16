@@ -101,3 +101,32 @@ async def test_create_message(testing_database):
     assert result.client_id == client.id
     assert result.status == mailings_models.MessageStatus.not_delivered
     assert isinstance(result.created_at, datetime)
+
+
+async def test_change_message_status(clear_testing_database):
+    default_status = mailings_schema.MessageStatus.not_delivered
+    expected_status = mailings_schema.MessageStatus.delivered
+
+    message = mailings_models.Message(
+        created_at=datetime.now(),
+        status=default_status,
+        mailing_id=0,
+        client_id=0,
+    )
+    clear_testing_database.add(message)
+    await clear_testing_database.commit()
+
+    message_copy = await mailings_crud.change_message_status(
+        clear_testing_database,
+        message.id,
+        expected_status,
+    )
+
+    await clear_testing_database.refresh(message)
+
+    assert message_copy is message
+    assert message.status == expected_status
+
+    message = await mailings_crud.change_message_status(clear_testing_database, 999, expected_status)
+
+    assert message is None
