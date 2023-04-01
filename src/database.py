@@ -11,9 +11,6 @@ class Base(DeclarativeBase):
 def get_sqlalchemy_postgres_url() -> str:
     postgres_url = get_settings().postgresql_url
 
-    if not isinstance(postgres_url, str):
-        raise TypeError("BACKENDTASK1_POSTGRESQL_URL is not str")
-
     database_url_data = postgres_url[postgres_url.find(':'):]
     sqlalchemy_database_url = f"postgresql+asyncpg{database_url_data}"
     return sqlalchemy_database_url
