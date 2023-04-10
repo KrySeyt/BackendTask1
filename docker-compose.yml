@@ -3,7 +3,7 @@ version: "3.8"
 services:
   mailing_service:
     ports:
-      - 8000:8000
+      - "8000:8000"
     environment:
       - BACKENDTASK1_POSTGRESQL_URL
       - BACKENDTASK1_ENDPOINT_URL
