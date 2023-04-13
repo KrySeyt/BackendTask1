@@ -2,15 +2,12 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from enum import Enum
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from src.schema import HashableBase, Base
 
 
-class HashableBaseModel(BaseModel):
-    def __hash__(self) -> int:
-        return id(self)
-
-
-class MailingBase(HashableBaseModel):
+class MailingBase(HashableBase):
     text: str = Field(example="Mailing text")
     start_time: datetime = Field(default=datetime.now(timezone.utc))
     end_time: datetime = Field(default=datetime.now(timezone.utc))
@@ -40,7 +37,7 @@ class MailingOut(MailingBase):
     clients_mobile_operator_codes: list[int] = Field(example=[900, 910])
 
 
-class MailingTagBase(BaseModel):
+class MailingTagBase(Base):
     text: str = Field(example="Any text")
 
 
@@ -64,7 +61,7 @@ class MessageStatus(Enum):
     not_delivered = "not delivered"
 
 
-class Message(BaseModel):
+class Message(Base):
     id: int
     created_at: datetime = Field(default=datetime.now(timezone.utc))
     status: MessageStatus
@@ -75,7 +72,7 @@ class Message(BaseModel):
         orm_mode = True
 
 
-class MailingStatsBase(BaseModel):
+class MailingStatsBase(Base):
     messages: dict[MessageStatus, int] = Field(
         example={status: 0 for status in MessageStatus}
     )
@@ -89,7 +86,7 @@ class MailingStatsOut(MailingStatsBase):
     mailing: MailingOut
 
 
-class DetailMailingStatsBase(BaseModel):
+class DetailMailingStatsBase(Base):
     messages: list[Message]
 
 

@@ -1,18 +1,14 @@
 from __future__ import annotations
 
 from pytz import all_timezones_set
-from pydantic import BaseModel, validator, Field
+from pydantic import validator, Field
 from sqlalchemy_utils import PhoneNumber
 
 from src.mailings.schema import MailingTag, MailingTagIn, MailingTagOut
+from src.schema import HashableBase
 
 
-class HashableBaseModel(BaseModel):
-    def __hash__(self) -> int:
-        return id(self)
-
-
-class ClientBase(HashableBaseModel):
+class ClientBase(HashableBase):
     phone_number: str = Field(example="+79009999999")
     phone_operator_code: int = Field(example=900)
     timezone: str = Field(example="Europe/Amsterdam")
