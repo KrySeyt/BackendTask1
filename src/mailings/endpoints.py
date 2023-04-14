@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from http import HTTPStatus
 
 import aiohttp
 
@@ -6,14 +7,11 @@ from src.mailings import schema as mailings_schema
 from src.clients import schema as clients_schema
 
 
-StatusCode = int
-
-
 class Endpoint(ABC):
     @abstractmethod
     async def send(self, message: mailings_schema.Message,
                    client: clients_schema.Client,
-                   mailing: mailings_schema.Mailing) -> StatusCode:
+                   mailing: mailings_schema.Mailing) -> HTTPStatus:
         raise NotImplementedError
 
 
@@ -24,21 +22,21 @@ class APIEndpoint(Endpoint):
 
     async def send(self, message: mailings_schema.Message,
                    client: clients_schema.Client,
-                   mailing: mailings_schema.Mailing) -> StatusCode:
+                   mailing: mailings_schema.Mailing) -> HTTPStatus:
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{self.url}/{message.id}", json={
                 "id": message.id,
                 "phone": int(client.phone_number),
                 "text": mailing.text,
             }) as response:
-                return response.status
+                return HTTPStatus(response.status)
 
 
 class TestEndpoint(Endpoint):
     async def send(self, message: mailings_schema.Message,
                    client: clients_schema.Client,
-                   mailing: mailings_schema.Mailing) -> StatusCode:
+                   mailing: mailings_schema.Mailing) -> HTTPStatus:
         print(f'Message id: {message.id}')
         print(f'Client id: {client.id}')
         print(f'Mailing id: {mailing.id}')
-        return 200
+        return HTTPStatus(200)

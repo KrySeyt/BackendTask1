@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import random
+from http import HTTPStatus
 
 import pytz
 
@@ -19,16 +20,16 @@ class SemiworkingEndpoint(endpoints.Endpoint):
 
     async def send(self, message: mailings_schema.Message,
                    client: clients_schema.Client,
-                   mailing: mailings_schema.Mailing) -> endpoints.StatusCode:
+                   mailing: mailings_schema.Mailing) -> HTTPStatus:
 
         self.event.set()
         try:
             if self.working:
                 self.sended_messages_count += 1
-                return 200
+                return HTTPStatus(200)
             else:
                 await asyncio.sleep(0.5)
-                return 500
+                return HTTPStatus(500)
         finally:
             self.working = not self.working
 
