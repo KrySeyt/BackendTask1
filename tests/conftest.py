@@ -9,7 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
 
 from src import main
 from src.mailings import schema
-from src.database import Base, get_async_engine, get_sessionmaker
+from src.database import Base
+from src.dependencies import get_db, get_async_engine
 
 
 @pytest.fixture
@@ -45,46 +46,29 @@ def create_test_database_schema() -> None:
     upgrade(cfg, "head")
 
 
-@pytest.fixture(scope="session")
-async def testing_db_engine() -> AsyncEngine:
-    engine = await get_async_engine()
-    yield engine
-    await engine.dispose()
-
-
-@pytest.fixture(scope="session")
-async def testing_db_session(testing_db_engine: AsyncEngine) -> AsyncSession:
-    sessionmaker = await get_sessionmaker(testing_db_engine)
-    session = sessionmaker()
-    yield session
-    await session.close()
-
-
 async def clear_db(db_engine: AsyncEngine) -> None:
     async with db_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
 
-@pytest.fixture(scope="module")
-async def testing_database(testing_db_session: AsyncSession,
-                           testing_db_engine: AsyncEngine) -> AsyncSession:
-    await testing_db_session.close()  # "When the Session is closed, it is essentially in the original state as when it
-    # was first constructed, and may be used again. In this sense, the Session.close() method is more like a “reset”
-    # back to the clean state and not as much as a “database close” method." - SQLAlchemy 2.0 docs
+@pytest.fixture(scope="module", autouse=True)
+async def clear_db_at_module_start() -> None:
+    await clear_db(get_async_engine())
 
-    await clear_db(testing_db_engine)
-    yield testing_db_session
+
+@pytest.fixture()
+async def testing_database() -> AsyncSession:
+    session = await get_db()
+    yield session
+    await session.close()
 
 
 @pytest.fixture
-async def clear_testing_database(testing_db_session: AsyncSession,
-                                 testing_db_engine: AsyncEngine) -> AsyncSession:
-    await testing_db_session.close()  # "When the Session is closed, it is essentially in the original state as when it
-    # was first constructed, and may be used again. In this sense, the Session.close() method is more like a “reset”
-    # back to the clean state and not as much as a “database close” method." - SQLAlchemy 2.0 docs
-
-    await clear_db(testing_db_engine)
-    yield testing_db_session
+async def clear_testing_database() -> AsyncSession:
+    await clear_db(get_async_engine())
+    session = await get_db()
+    yield session
+    await session.close()
 
 

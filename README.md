@@ -12,7 +12,6 @@ Task - https://www.craft.do/s/n6OVYFVUpq0o6L
 *Tests and mypy performed on prebuilded image NOT rebuilding for every step*
 - ✅ Building Docker image
 - ✅ Mypy (`--strict`)
-- ✅ Deepsource (https://deepsource.io/)
 - ✅ Tests
 
 ✅ 3. Docker compose (*see below*)

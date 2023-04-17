@@ -1,12 +1,10 @@
-from unittest.mock import MagicMock
-
-from src import database
+from src.database import get_async_engine
 
 
-async def test_get_sessionmaker(monkeypatch):
-    settings_mock = MagicMock()
-    settings_mock.postgresql_url = "postgresql+psycopg2://scott:tiger@host/dbname"
+async def test_get_async_engine():
+    default_engine1 = get_async_engine()
+    default_engine2 = get_async_engine()
+    assert default_engine1 == default_engine2
 
-    sessionmaker = await database.get_sessionmaker()
-    session = sessionmaker()
-    await session.close()
+    custom_engine = get_async_engine("postgresql+asyncpg://scott:tiger@localhost:5432/mydatabase")
+    assert default_engine1 != custom_engine

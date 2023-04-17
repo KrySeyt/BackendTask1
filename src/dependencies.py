@@ -2,18 +2,14 @@ from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
-from src.database import get_sessionmaker
+from src.database import get_async_engine
 from src import context
 
 
 async def get_db() -> AsyncSession:
-    if hasattr(get_db, "db"):
-        db: AsyncSession = get_db.db
-        return db
-    sessionmaker = await get_sessionmaker()
-    db = sessionmaker()
-    setattr(get_db, "db", db)
-    return db
+    engine = get_async_engine()
+    async with AsyncSession(engine, expire_on_commit=False) as session:
+        return session
 
 
 async def get_db_stub() -> None:

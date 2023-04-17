@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy_utils import PhoneNumberType, PhoneNumber
 
@@ -19,23 +17,3 @@ class Client(Base):
     tag_id: Mapped[int] = mapped_column(ForeignKey("mailing_tags.id"))
     tag: Mapped[MailingTag] = relationship(lazy="subquery")
     timezone: Mapped[str] = mapped_column(default="Europe/Amsterdam")
-
-    @classmethod
-    async def create(cls,
-                     db: AsyncSession,
-                     phone_number: str,
-                     phone_operator_code: int,
-                     tag_text: str,
-                     timezone: str) -> Client:
-        tag = (await db.execute(select(MailingTag).filter(MailingTag.text == tag_text))).scalar()
-        if not tag:
-            tag = MailingTag(text=tag_text)
-            db.add(tag)
-            await db.commit()
-            await db.refresh(tag)
-        return cls(
-            phone_number=phone_number,
-            phone_operator_code=phone_operator_code,
-            tag=tag,
-            timezone=timezone
-        )

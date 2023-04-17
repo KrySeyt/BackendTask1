@@ -6,14 +6,13 @@ from asgi_lifespan import LifespanManager
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src import main, database
-from src import events
 from src import dependencies
 from src.mailings import schedule
 from src.clients import schema as clients_schema
 from src.mailings import events as mailings_events
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(autouse=True)
 async def change_main_database(testing_database):
     async def mock_get_db():
         return testing_database
@@ -25,7 +24,7 @@ async def test_get_db(monkeypatch):
     settings_mock = MagicMock()
     settings_mock.postgresql_url = "postgresql://scott:tiger@hostname/dbname"
     monkeypatch.setattr(database, "get_settings", lambda *args, **kwargs: settings_mock)
-    assert await dependencies.get_db() is await dependencies.get_db()
+    await dependencies.get_db()
 
 
 async def test_startup_shutdown(monkeypatch):
@@ -36,7 +35,7 @@ async def test_startup_shutdown(monkeypatch):
     async def mock_get_db():
         return mock_db
 
-    monkeypatch.setattr(events, "get_db", mock_get_db)
+    monkeypatch.setattr(mailings_events, "get_db", mock_get_db)
     monkeypatch.setattr(mailings_events, "get_all_mailings", mock_get_mailings := AsyncMock(return_value=(1, 2, 3)))
     monkeypatch.setattr(schedule.Schedule, "add_mailing_to_schedule", mock_mailing_to_schedule := AsyncMock())
 
@@ -45,7 +44,6 @@ async def test_startup_shutdown(monkeypatch):
 
     mock_get_mailings.assert_awaited()
     mock_mailing_to_schedule.assert_awaited()
-    mock_close.assert_awaited()
 
 
 async def test_create_client_200(client):
@@ -69,7 +67,6 @@ async def test_create_client_200(client):
 
     response = await client.post(r"client/", json=data)
     result = response.json()
-    print(result)
 
     assert response.status_code == 200
     for key in expected_result:
@@ -213,7 +210,6 @@ async def test_delete_client_200(client):
             "text": "Just another tag"
         }
     }
-
     response = await client.delete("client/1")
 
     assert response.status_code == 200
