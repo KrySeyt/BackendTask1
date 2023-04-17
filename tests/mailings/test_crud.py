@@ -9,16 +9,31 @@ from src.mailings import models as mailings_models
 from src.mailings import crud as mailings_crud
 
 
-async def test_get_tags_by_texts(testing_database: AsyncSession):
+async def test_create_mailing(testing_database: AsyncSession):
+    mailing_schema = mailings_schema.MailingIn(
+        clients_tags=[mailings_schema.MailingTagIn(text=i) for i in ("tag1", "tag2")],
+        clients_mobile_operator_codes=[900, 910],
+        text="mailing text",
+        start_time=datetime.now(),
+        end_time=datetime.now(),
+    )
+    db_mailing = await mailings_crud.create_mailing(testing_database, mailing_schema)
+    db_mailing_clone = await mailings_crud.create_mailing(testing_database, mailing_schema)
+
+    assert db_mailing_clone.clients_tags == db_mailing.clients_tags
+    assert db_mailing_clone.clients_mobile_operator_codes == db_mailing.clients_mobile_operator_codes
+
+
+async def test_get_tags_by_texts(clear_testing_database):
     tags = [mailings_models.MailingTag(text=text) for text in ("First", "Second", "Third")]
     for tag in tags:
-        testing_database.add(tag)
-    await testing_database.commit()
+        clear_testing_database.add(tag)
+    await clear_testing_database.commit()
 
     tags_texts = ("First", "Third")
     expected_result = [tags[0], tags[2]]
 
-    result = await mailings_crud.get_tags_by_texts(testing_database, tags_texts)
+    result = await mailings_crud.get_tags_by_texts(clear_testing_database, tags_texts)
 
     assert result == expected_result
 
@@ -46,14 +61,15 @@ async def test_update_mailing_none(testing_database):
 
 
 async def test_update_mailing_mailing(testing_database):
-    db_mailing = await mailings_models.Mailing.create(
-        db=testing_database,
-        clients_tags=["tag1", "tag2"],
+    mailing = mailings_schema.MailingIn(
+        clients_tags=[mailings_schema.MailingTagIn(text=i) for i in ("tag1", "tag2")],
         clients_mobile_operator_codes=[900, 910],
         text="mailing text",
         start_time=datetime.now(),
         end_time=datetime.now(),
     )
+    db_mailing = await mailings_crud.create_mailing(testing_database, mailing)
+
     testing_database.add(db_mailing)
     await testing_database.commit()
 

@@ -1,27 +1,44 @@
+import pytest
 from sqlalchemy import select
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.mailings import schema as mailings_schema
+from src.mailings import models as mailings_models
 from src.clients import schema as clients_schema
 from src.clients import models as clients_models
 from src.clients import crud as clients_crud
-from src.mailings import models as mailings_models
 
 
-async def test_get_client_by_phone_number(testing_database: AsyncSession):
-    client = await clients_models.Client.create(
-        db=testing_database,
+async def test_create_client(testing_database: AsyncSession):
+    client_schema = clients_schema.ClientIn(
         phone_number="+79999999999",
         phone_operator_code=999,
-        tag_text="Tag text",
+        tag=mailings_schema.MailingTagIn(
+            text="Tag text"
+        ),
         timezone="Europe/Amsterdam",
     )
-    testing_database.add(client)
-    await testing_database.commit()
 
-    expected_result = client
-    result = await clients_crud.get_client_by_phone_number(testing_database, client.phone_number)
+    db_client = await clients_crud.create_client(testing_database, client_schema)
+    assert db_client
+    db_client_copy = await clients_crud.create_client(testing_database, client_schema)
+    assert db_client_copy.tag_id == db_client.tag_id, "Clients tags must be unique"
+
+
+async def test_get_client_by_phone_number(clear_testing_database: AsyncSession):
+    client_schema = clients_schema.ClientIn(
+        phone_number="+79999999999",
+        phone_operator_code=999,
+        tag=mailings_schema.MailingTagIn(
+            text="Tag text"
+        ),
+        timezone="Europe/Amsterdam",
+    )
+    db_client = await clients_crud.create_client(clear_testing_database, client_schema)
+
+    expected_result = db_client
+    result = await clients_crud.get_client_by_phone_number(clear_testing_database, db_client.phone_number)
     assert result == expected_result
 
 
@@ -64,10 +81,12 @@ async def test_get_clients_by_tags(testing_database):
     tags = (await testing_database.execute(select(mailings_models.MailingTag))).scalars().all()
     tags_id = map(lambda x: x.id, tags)
 
-    stmt = select(clients_models.Client).join(mailings_models.MailingTag).where(mailings_models.MailingTag.id.in_(tags_id))
+    stmt = select(clients_models.Client).join(mailings_models.MailingTag).\
+        where(mailings_models.MailingTag.id.in_(tags_id))
     expected_result = (await testing_database.scalars(stmt)).all()
 
-    result = await clients_crud.get_clients_by_tags(testing_database, [mailings_schema.MailingTag.from_orm(tag) for tag in tags])
+    result = await clients_crud.get_clients_by_tags(testing_database,
+                                                    [mailings_schema.MailingTag.from_orm(tag) for tag in tags])
     assert result == expected_result
 
 

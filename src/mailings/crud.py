@@ -1,5 +1,5 @@
 import datetime
-from typing import Sequence
+from typing import Iterable
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -9,7 +9,7 @@ from . import schema
 from . import models
 
 
-async def get_tags_by_texts(db: AsyncSession, tags: Sequence[str]) -> list[models.MailingTag]:
+async def get_tags_by_texts(db: AsyncSession, tags: Iterable[str]) -> list[models.MailingTag]:
     stmt = select(models.MailingTag).where(models.MailingTag.text.in_(tags))
     db_tags = await db.execute(stmt)
     return list(db_tags.scalars().all())
@@ -23,6 +23,16 @@ async def create_mailing_tag(db: AsyncSession, tag: schema.MailingTagIn) -> mode
     return db_mailing_tag
 
 
+async def create_mailing_tags(db: AsyncSession, tags: Iterable[schema.MailingTagIn]) -> list[models.MailingTag]:
+    db_tags = []
+    for tag_schema in tags:
+        db_tags.append(models.MailingTag(**tag_schema.dict()))
+
+    db.add_all(db_tags)
+    await db.commit()
+    return db_tags
+
+
 async def get_mailing_tag(db: AsyncSession, tag_text: str) -> models.MailingTag | None:
     return (await db.execute(select(models.MailingTag).filter(models.MailingTag.text == tag_text))).scalar()
 
@@ -32,19 +42,32 @@ async def get_operator_code(db: AsyncSession, code: int) -> models.MailingMobile
         models.MailingMobileOperatorCode.code == code))).scalar()
 
 
+async def get_operator_codes(db: AsyncSession, codes: Iterable[int]) -> list[models.MailingMobileOperatorCode]:
+    return list((await db.execute(select(models.MailingMobileOperatorCode).filter(
+        models.MailingMobileOperatorCode.code.in_(codes)))).scalars())
+
+
 async def create_mailing(db: AsyncSession, mailing: schema.MailingIn) -> models.Mailing:
-    db_mailing = await models.Mailing.create(
-        db=db,
+    existed_tags = await get_tags_by_texts(db, map(lambda x: x.text, mailing.clients_tags))
+    existed_tags_texts = map(lambda x: x.text, existed_tags)
+    not_existed_tags = filter(lambda x: x.text not in existed_tags_texts, mailing.clients_tags)
+    clients_tags = existed_tags + await create_mailing_tags(db, not_existed_tags)
+
+    existed_operator_codes = await get_operator_codes(db, mailing.clients_mobile_operator_codes)
+    existed_codes_numbers = map(lambda x: x.code, existed_operator_codes)
+    not_existed_codes = filter(lambda x: x not in existed_codes_numbers, mailing.clients_mobile_operator_codes)
+    operator_codes = existed_operator_codes + [models.MailingMobileOperatorCode(code=i) for i in not_existed_codes]
+
+    db_mailing = models.Mailing(
         text=mailing.text,
-        clients_tags=[tag.text for tag in mailing.clients_tags],
-        clients_mobile_operator_codes=mailing.clients_mobile_operator_codes,
+        clients_tags=clients_tags,
+        clients_mobile_operator_codes=operator_codes,
         start_time=mailing.start_time,
         end_time=mailing.end_time,
     )
 
     db.add(db_mailing)
     await db.commit()
-    await db.refresh(db_mailing)
     return db_mailing
 
 
@@ -70,14 +93,14 @@ async def update_mailing(db: AsyncSession, mailing: schema.MailingInWithID) -> m
     for tag in mailing.clients_tags:
         db_tag = await get_mailing_tag(db, tag.text)
         if not db_tag:
-            db_tag = models.MailingTag(tag.text)
+            db_tag = models.MailingTag(text=tag.text)
         clients_tags.append(db_tag)
 
     clients_operator_codes: list[models.MailingMobileOperatorCode] = []
     for code in mailing.clients_mobile_operator_codes:
         db_code = await get_operator_code(db, code)
         if not db_code:
-            db_code = models.MailingMobileOperatorCode(code)
+            db_code = models.MailingMobileOperatorCode(code=code)
         clients_operator_codes.append(db_code)
 
     db_mailing.text = mailing.text
@@ -103,7 +126,7 @@ async def get_mailing_messages(db: AsyncSession, mailing_id: int) -> list[models
 
 
 async def create_message(db: AsyncSession, mailing: schema.Mailing, client: clients_schema.Client) -> models.Message:
-    message = await models.Message.create(
+    message = models.Message(
         mailing_id=mailing.id,
         client_id=client.id,
         created_at=datetime.datetime.now(),

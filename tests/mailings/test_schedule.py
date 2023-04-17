@@ -7,7 +7,7 @@ from src.mailings import schedule
 async def test_mailing_task(mailing, monkeypatch):
     seconds_before_sending = 20
     mailing.start_time += datetime.timedelta(seconds=seconds_before_sending)
-    mailing.end_time += datetime.timedelta(seconds=seconds_before_sending+10)
+    mailing.end_time += datetime.timedelta(seconds=seconds_before_sending + 10)
 
     sending_mock = MagicMock()
     sending_mock.start = AsyncMock()
@@ -22,7 +22,7 @@ async def test_mailing_task(mailing, monkeypatch):
 
     seconds_before_sending = 0
     mailing.start_time = datetime.datetime.now() + datetime.timedelta(seconds=seconds_before_sending)
-    mailing.end_time = datetime.datetime.now() + datetime.timedelta(seconds=seconds_before_sending+10)
+    mailing.end_time = datetime.datetime.now() + datetime.timedelta(seconds=seconds_before_sending + 10)
 
     sleep_mock.reset_mock()
     sending_mock.start.reset_mock()

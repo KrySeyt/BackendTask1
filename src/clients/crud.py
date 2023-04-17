@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Iterable
 
 from sqlalchemy_utils import PhoneNumber
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,27 +13,34 @@ from . import schema as clients_schema
 
 
 async def create_client(db: AsyncSession, client: clients_schema.ClientIn) -> models.Client:
-    db_client = await models.Client.create(
-        db=db,
+    client_tag = await mailings_crud.get_mailing_tag(db, client.tag.text)
+    if not client_tag:
+        client_tag = MailingTag(**client.tag.dict())
+
+    db_client = models.Client(
         phone_number=client.phone_number,
         phone_operator_code=client.phone_operator_code,
-        tag_text=client.tag.text,
+        tag=client_tag,
         timezone=client.timezone
     )
+
     db.add(db_client)
     await db.commit()
     await db.refresh(db_client)
     return db_client
 
 
-async def create_clients(db: AsyncSession, clients: Sequence[clients_schema.ClientIn]) -> list[models.Client]:
+async def create_clients(db: AsyncSession, clients: Iterable[clients_schema.ClientIn]) -> list[models.Client]:
     db_clients = []
     for client in clients:
-        db_client = await models.Client.create(
-            db=db,
+        client_tag = await mailings_crud.get_mailing_tag(db, client.tag.text)
+        if not client_tag:
+            client_tag = await mailings_crud.create_mailing_tag(db, client.tag)
+
+        db_client = models.Client(
             phone_number=client.phone_number,
             phone_operator_code=client.phone_operator_code,
-            tag_text=client.tag.text,
+            tag=client_tag,
             timezone=client.timezone
         )
         db_clients.append(db_client)
@@ -61,7 +68,8 @@ async def update_client(db: AsyncSession, client: clients_schema.ClientInWithID)
     db_client = await db.get(models.Client, client.id)
     if not db_client:
         return None
-    new_tag = await mailings_crud.get_mailing_tag(db, client.tag.text) or await mailings_crud.create_mailing_tag(db, client.tag)
+    new_tag = await mailings_crud.get_mailing_tag(db, client.tag.text) or \
+              await mailings_crud.create_mailing_tag(db, client.tag)
 
     db_client.tag_id = new_tag.id
     db_client.tag = new_tag
@@ -101,7 +109,7 @@ async def get_clients_by_phone_code(db: AsyncSession, phone_code: int) -> list[m
     ))).scalars().all())
 
 
-async def get_clients_by_phone_codes(db: AsyncSession, phone_codes: Sequence[int]) -> list[models.Client]:
+async def get_clients_by_phone_codes(db: AsyncSession, phone_codes: Iterable[int]) -> list[models.Client]:
     return list((await db.execute(select(models.Client).where(
         models.Client.phone_operator_code.in_(set(phone_codes))
     ))).scalars().all())
