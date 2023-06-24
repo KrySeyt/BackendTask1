@@ -163,19 +163,19 @@ IMAGE_VERSION=main-12e214a docker compose -f docker-compose.yml -f mypy.yml up
 
 #### With local files:
 
-Start dev container:
+Start dev container with `bash`:
 ```shell
-docker compose up
+docker compose run mailing_service /bin/bash
 ```
 
 Run tests:
 ```shell
-pytest tests/
+pytest tests
 ```
 
 Tests with coverage report:
 ```shell
-pytest tests/ --cov=src
+pytest tests --cov=src
 ```
 
 Coverage report from `.coverage`:
@@ -186,7 +186,7 @@ coverage report -m
 
 Run mypy:
 ```shell
-mypy src/ --strict
+mypy src --strict
 ```
 
 ## CI
