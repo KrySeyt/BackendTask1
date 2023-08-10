@@ -40,7 +40,7 @@ git clone https://github.com/KrySeyt/BackendTask1.git
 - *IMAGE_VERSION*
 
 ```shell
-BACKENDTASK1_POSTGRESQL_URL=<YOUR_POSTGRES_URL> IMAGE_VERSION="1.0.0-929fb7f" docker compose -f docker.compose.yml -f production-nodb.yml up
+BACKENDTASK1_POSTGRESQL_URL=<YOUR_POSTGRES_URL> IMAGE_VERSION="1.0.0-929fb7f" docker compose -f docker-compose.yml -f production-nodb.yml up
 ```
 
 #### Production with docker running db (bad idea):
@@ -49,7 +49,7 @@ BACKENDTASK1_POSTGRESQL_URL=<YOUR_POSTGRES_URL> IMAGE_VERSION="1.0.0-929fb7f" do
 - *IMAGE_VERSION*
 
 ```shell
-IMAGE_VERSION="1.0.0-929fb7f" docker compose -f docker.compose.yml -f production-db.yml up
+IMAGE_VERSION="1.0.0-929fb7f" docker compose -f docker-compose.yml -f production-db.yml up
 ```
 
 #### Dev with mounted local dir:
