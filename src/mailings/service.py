@@ -33,7 +33,7 @@ async def delete_mailing(db: AsyncSession, mailing: schema.Mailing) -> schema.Ma
 async def create_mailing(db: AsyncSession, mailing: schema.MailingIn, endpoint: Endpoint) -> schema.Mailing:
     mailing_in_db = await crud.create_mailing(db, mailing)
     mailing_schema = schema.Mailing.from_orm(mailing_in_db)
-    asyncio.create_task(Schedule.add_mailing_to_schedule(db, mailing_schema, endpoint))
+    task = asyncio.create_task(Schedule.add_mailing_to_schedule(db, mailing_schema, endpoint))
     return mailing_schema
 
 
